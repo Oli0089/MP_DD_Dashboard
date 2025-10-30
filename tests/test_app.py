@@ -12,6 +12,7 @@ def client():
     with app.test_client() as c:
         yield c
 
+
 def test_index_renders(client):
     # Ensures the home page ('/') renders successfully
     resp = client.get("/")
