@@ -1,6 +1,6 @@
 # app/__init__.py
 from flask import Flask, jsonify
-from app import routes 
+from app import routes
 
 
 def create_app():
