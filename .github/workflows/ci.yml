@@ -9,7 +9,7 @@ on:
     branches: [ dev ]        
 
 
-# Runner, Modern Python, style/syntax issues
+# Runner
 jobs:
   lint-and-bdd:
     runs-on: ubuntu-latest     
@@ -22,10 +22,23 @@ jobs:
         with:
           python-version: '3.11'  
 
-      - name: Install QA tooling
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 behave  # Linter + BDD runner
+           pip install -r requirements.txt
 
+      # Style/syntax issues
       - name: Lint (flake8)
         run: flake8 .  
+
+      # Saves test reports
+      - name: Behave (BDD)
+        run: |
+          mkdir -p reports         # JUnit XML
+          behave --junit --junit-directory reports
+
+      - name: Upload BDD reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: bdd-reports
+          path: reports
