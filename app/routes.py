@@ -10,6 +10,7 @@ def index():
     # Temporary home page until login is built
     return render_template("index.html")
 
+
 @bp.route("/tickets")
 def tickets():
     return render_template("tickets.html")
