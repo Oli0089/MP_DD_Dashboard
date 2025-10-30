@@ -7,7 +7,7 @@ from app import create_app
 def step_app_initialised(context):
     # Creates a test instance
     app = create_app()
-    context.client = app.test_client() 
+    context.client = app.test_client()
 
 
 @when('I GET "/health"')
