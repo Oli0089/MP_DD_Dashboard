@@ -1,26 +1,26 @@
 # Continuous Integration pipeline
-name: CI 
+name: CI
 
 # Run on pushes to main/dev and PRs
 on:
   push:
-    branches: [ main, dev ]   
+    branches: [ main, dev ]
   pull_request:
-    branches: [ dev ]        
+    branches: [ dev ]
 
 
 # Runner
 jobs:
   lint-and-bdd:
-    runs-on: ubuntu-latest     
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'  
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
@@ -29,7 +29,11 @@ jobs:
 
       # Style/syntax issues
       - name: Lint (flake8)
-        run: flake8 .  
+        run: flake8 .
+
+      - name: Pytest
+        run: |
+          pytest -q -
 
       # Saves test reports
       - name: Behave (BDD)
