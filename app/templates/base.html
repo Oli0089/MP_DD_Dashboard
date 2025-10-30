@@ -13,37 +13,42 @@
 <body>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container">
-    <a class="navbar-brand fw-semibold" href="#">Buddy Tracker</a>
+  <div class="container-fluid"> <!-- use fluid for better mobile spacing -->
+    <!-- Brand (always visible) -->
+    <a class="navbar-brand fw-semibold" href="{{ url_for('routes.index') }}">Buddy Tracker</a>
 
-    <!-- Burger icon for mobile -->
+    <!-- Burger icon-->
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
             aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <!-- Left: primary nav -->
-    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-      <li class="nav-item">
-        <a class="nav-link{% if request.endpoint == 'routes.index' %} active{% endif %}"
-          href="{{ url_for('routes.index') }}">Tickets</a>
-      </li>
+    <!-- Collapsible area. Left Side nav -->
+    <div class="collapse navbar-collapse" id="mainNav">
+      <!-- Left: stays left on desktop, stacks under burger on mobile -->
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link{% if request.endpoint == 'routes.tickets' %} active{% endif %}"
+             href="{{ url_for('routes.tickets') }}">Tickets</a>
+        </li>
+	      <!-- Admin route -->
+        <li class="nav-item">
+          <a class="nav-link{% if request.endpoint == 'routes.admin' %} active{% endif %}"
+             href="{{ url_for('routes.admin') }}">Admin</a>
+        </li>
+      </ul>
 
-      <!-- Admin disabled until route exists -->
-      <li class="nav-item">
-        <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Admin</a>
-      </li>
-    </ul>
-
-    <!-- Right: auth disabled until route exists -->
-    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-      <li class="nav-item">
-        <a class="nav-link" href="#">Login</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">Register</a>
-      </li>
-    </ul>
+      <!-- Right: login and register nav -->
+      <ul class="navbar-nav ms-lg-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link{% if request.endpoint == 'routes.login' %} active{% endif %}"
+             href="{{ url_for('routes.login') }}">Login</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link{% if request.endpoint == 'routes.register' %} active{% endif %}"
+             href="{{ url_for('routes.register') }}">Register</a>
+        </li>
+      </ul>
     </div>
   </div>
 </nav>

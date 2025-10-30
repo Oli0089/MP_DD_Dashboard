@@ -1,4 +1,11 @@
 
 .navbar-username { opacity: 0.8; }
+
 .confirm-modal .modal-footer .btn-danger { min-width: 110px; }
+
 .alert { margin-bottom: 0.75rem; }
+
+/* Remove extra bottom margin between the two nav lists in burger mode */
+@media (max-width: 991.98px) {
+  .navbar .navbar-collapse .navbar-nav { margin-bottom: 0 !important; }
+}
