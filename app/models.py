@@ -25,7 +25,10 @@ class User(db.Model):
 
     # stores a hashed password
     password = db.Column(db.String(255), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.now(datetime.timezone.utc))
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.now(datetime.timezone.utc)
+    )
     last_login = db.Column(db.DateTime, nullable=True)
 
     # links to roles table
@@ -52,15 +55,25 @@ class User(db.Model):
     # returns admin for user if so
     @property
     def is_admin(self):
-        return any(link.role and link.role.name == "Admin" for link in self.roles)
+        return any(
+            link.role and link.role.name == "Admin"
+            for link in self.roles
+        )
 
 
 # links users and roles tables
 class UserRole(db.Model):
     __tablename__ = "user_roles"
 
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
-    role_id = db.Column(db.Integer, db.ForeignKey("roles.id"), primary_key=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id"), primary_key=True
+    )
+
+    role_id = db.Column(
+        db.Integer,
+        db.ForeignKey("roles.id"), primary_key=True
+    )
 
     user = db.relationship("User", back_populates="roles")
     role = db.relationship("Role", back_populates="users")
@@ -76,13 +89,19 @@ class Ticket(db.Model):
 
     title = db.Column(db.String(200), nullable=False)
     status = db.Column(db.String(20), nullable=False, default="open")
-    created_at = db.Column(db.DateTime, default=datetime.now(datetime.timezone.utc))
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.now(datetime.timezone.utc)
+    )
     ready_at = db.Column(db.DateTime, nullable=True)
 
     # who raised the ticket
     created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     # who is the buddy on this ticket
-    buddy_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    buddy_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id"), nullable=True
+    )
 
     creator = db.relationship(
         "User",
