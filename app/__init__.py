@@ -4,13 +4,11 @@ from flask import Flask, jsonify
 from app import routes
 from flask_sqlalchemy import SQLAlchemy
 
-
 db = SQLAlchemy()
 
 
 def create_app(test_config=None):
     app = Flask(__name__)
-
 
     # to be updated
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
@@ -33,18 +31,14 @@ def create_app(test_config=None):
         # local dev SQLite file
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///dev.db"
 
-
     # link database
     db.init_app(app)
-
 
     # register blueprints
     app.register_blueprint(routes.bp)
 
-
     @app.get("/health")
     def health():
         return jsonify(status="healthy"), 200
-
 
     return app
