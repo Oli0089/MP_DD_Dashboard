@@ -27,7 +27,7 @@ class User(db.Model):
     password = db.Column(db.String(255), nullable=False)
     created_at = db.Column(
         db.DateTime,
-        default=datetime.now(datetime.timezone.utc)
+        default=datetime.utcnow
     )
     last_login = db.Column(db.DateTime, nullable=True)
 
@@ -91,7 +91,7 @@ class Ticket(db.Model):
     status = db.Column(db.String(20), nullable=False, default="open")
     created_at = db.Column(
         db.DateTime,
-        default=datetime.now(datetime.timezone.utc)
+        default=datetime.utcnow
     )
     ready_at = db.Column(db.DateTime, nullable=True)
 
