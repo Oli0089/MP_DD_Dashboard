@@ -23,9 +23,19 @@ def tickets():
     return render_template("tickets.html")
 
 
+# admins only
 @bp.route("/admin")
+@login_required
 def admin():
+    if not current_user.is_admin:
+        flash(
+            "You do not have permission to view that page.",
+            "danger",
+        )
+        return redirect(url_for("routes.index"))
+
     return render_template("admin.html")
+
 
 # logic to login
 @bp.route("/login", methods=["GET", "POST"])

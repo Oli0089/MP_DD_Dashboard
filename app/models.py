@@ -72,6 +72,7 @@ class User(db.Model):
     def is_authenticated(self):
         return True
 
+
 # links users and roles tables
 class UserRole(db.Model):
     __tablename__ = "user_roles"
