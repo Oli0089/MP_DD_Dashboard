@@ -2,9 +2,13 @@
 import os
 from flask import Flask, jsonify
 from app import routes
+from app.auth import auth
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
 
 db = SQLAlchemy()
+
+login_manager = LoginManager()
 
 
 def create_app(test_config=None):
@@ -34,11 +38,29 @@ def create_app(test_config=None):
     # link database
     db.init_app(app)
 
+    login_manager.init_app(app)
+    # login endpoint
+    login_manager.login_view = "auth.login"
+    # flash
+    login_manager.login_message_category = "warning"
+
     # register blueprints
     app.register_blueprint(routes.bp)
+
+    app.register_blueprint(auth)
 
     @app.get("/health")
     def health():
         return jsonify(status="healthy"), 200
 
     return app
+
+
+# has to be down here to avoid circular import
+from app.models import User
+
+
+# Flask login to load a user from the database by ID
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
