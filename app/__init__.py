@@ -1,7 +1,6 @@
 # app/__init__.py
 import os
 from flask import Flask, jsonify
-from app import routes
 from app.auth import auth
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -40,11 +39,13 @@ def create_app(test_config=None):
 
     login_manager.init_app(app)
     # login endpoint
-    login_manager.login_view = "auth.login"
+    login_manager.login_view = "routes.login"
     # flash
     login_manager.login_message_category = "warning"
 
-    # register blueprints
+    # stop circular import
+    from app import routes  # noqa: E402
+
     app.register_blueprint(routes.bp)
 
     app.register_blueprint(auth)

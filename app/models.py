@@ -60,6 +60,18 @@ class User(db.Model):
             for link in self.roles
         )
 
+    # needed for flask-login logic
+    @property
+    def is_active(self):
+        return True
+
+    def get_id(self):
+        return str(self.id)
+
+    @property
+    def is_authenticated(self):
+        return True
+
 
 # links users and roles tables
 class UserRole(db.Model):
