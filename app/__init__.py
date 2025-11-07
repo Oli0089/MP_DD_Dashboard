@@ -57,8 +57,7 @@ def create_app(test_config=None):
 
 
 # has to be down here to avoid circular import
-from app.models import User
-
+from .models import User # noqa: E402
 
 # Flask login to load a user from the database by ID
 @login_manager.user_loader
