@@ -31,22 +31,25 @@
           <a class="nav-link{% if request.endpoint == 'routes.tickets' %} active{% endif %}"
              href="{{ url_for('routes.tickets') }}">Tickets</a>
         </li>
-	      <!-- Admin route -->
-        <li class="nav-item">
-          <a class="nav-link{% if request.endpoint == 'routes.admin' %} active{% endif %}"
-             href="{{ url_for('routes.admin') }}">Admin</a>
-        </li>
       </ul>
+      <!-- Admin route -->
       {% if current_user.is_authenticated %}
-      <ul class="navbar-nav ms-lg-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link disabled">{{ current_user.username }}</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link{% if request.endpoint == 'routes.logout' %} active{% endif %}"
-             href="{{ url_for('routes.logout') }}">Logout</a>
-        </li>
-      </ul>
+        <ul class="navbar-nav ms-lg-auto mb-2 mb-lg-0">
+          {% if current_user.is_admin %}
+            <!-- Admin link only for admin users -->
+            <li class="nav-item">
+              <a class="nav-link{% if request.endpoint == 'routes.admin' %} active{% endif %}"
+                href="{{ url_for('routes.admin') }}">Admin</a>
+            </li>
+          {% endif %}
+          <li class="nav-item">
+            <a class="nav-link disabled">{{ current_user.username }}</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link{% if request.endpoint == 'routes.logout' %} active{% endif %}"
+              href="{{ url_for('routes.logout') }}">Logout</a>
+          </li>
+        </ul>
       {% else %}
       <!-- Right: login and register nav -->
       <ul class="navbar-nav ms-lg-auto mb-2 mb-lg-0">
