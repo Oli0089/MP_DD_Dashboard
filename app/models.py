@@ -68,6 +68,10 @@ class User(db.Model):
     def get_id(self):
         return str(self.id)
 
+    @property
+    def is_authenticated(self):
+        return True
+
 # links users and roles tables
 class UserRole(db.Model):
     __tablename__ = "user_roles"

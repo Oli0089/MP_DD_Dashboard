@@ -37,7 +37,17 @@
              href="{{ url_for('routes.admin') }}">Admin</a>
         </li>
       </ul>
-
+      {% if current_user.is_authenticated %}
+      <ul class="navbar-nav ms-lg-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link disabled">{{ current_user.username }}</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link{% if request.endpoint == 'routes.logout' %} active{% endif %}"
+             href="{{ url_for('routes.logout') }}">Logout</a>
+        </li>
+      </ul>
+      {% else %}
       <!-- Right: login and register nav -->
       <ul class="navbar-nav ms-lg-auto mb-2 mb-lg-0">
         <li class="nav-item">
@@ -49,6 +59,7 @@
              href="{{ url_for('routes.register') }}">Register</a>
         </li>
       </ul>
+      {% endif %}
     </div>
   </div>
 </nav>
