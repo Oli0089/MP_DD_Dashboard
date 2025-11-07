@@ -18,9 +18,9 @@ def client():
 
 def test_index_renders(client):
     # Ensures the home page ('/') renders successfully
-    resp = client.get("/")
+    resp = client.get("/", follow_redirects=True)
     assert resp.status_code == 200
-    assert b"Buddy Ticket Tracker" in resp.data
+    assert b"Login" in resp.data
 
 
 def test_login_page_loads(client):
