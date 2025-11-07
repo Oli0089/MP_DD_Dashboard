@@ -2,6 +2,7 @@
 import os
 from flask import Flask, jsonify
 from app import routes
+from app.auth import auth
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 
@@ -45,6 +46,8 @@ def create_app(test_config=None):
 
     # register blueprints
     app.register_blueprint(routes.bp)
+
+    app.register_blueprint(auth)
 
     @app.get("/health")
     def health():
