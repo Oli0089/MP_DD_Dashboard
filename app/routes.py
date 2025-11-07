@@ -1,6 +1,9 @@
 # app/routes.py
+from datetime import datetime
+
 from flask import Blueprint, render_template, redirect, url_for, flash, request
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import login_user, logout_user, login_required, current_user
 
 from app import db
 from app.models import User, Role, UserRole
@@ -24,10 +27,38 @@ def tickets():
 def admin():
     return render_template("admin.html")
 
-
-@bp.route("/login")
+# logic to login
+@bp.route("/login", methods=["GET", "POST"])
 def login():
+    if request.method == "POST":
+        # get form values
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+
+        # basic check that both fields are filled in
+        if not username or not password:
+            flash("Please enter both username and password.", "warning")
+            return redirect(url_for("routes.login"))
+
+        user = User.query.filter_by(username=username).first()
+
+        # if the user exists and password matches, log them in
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+
+            # update last_login time
+            user.last_login = datetime.utcnow()
+            db.session.commit()
+
+            flash("Logged in successfully.", "success")
+            return redirect(url_for("routes.index"))
+
+        # otherwise show an error
+        flash("Invalid username or password.", "danger")
+        return redirect(url_for("routes.login"))
+
     return render_template("login.html")
+
 
 # logic to regsiter a new account with checks
 @bp.route("/register", methods=["GET", "POST"])
@@ -82,3 +113,11 @@ def register():
         return redirect(url_for("routes.login"))
 
     return render_template("register.html")
+
+
+@bp.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    flash("You have been logged out.", "success")
+    return redirect(url_for("routes.login"))
