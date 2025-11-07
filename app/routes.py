@@ -13,12 +13,14 @@ bp = Blueprint("routes", __name__)
 
 
 @bp.route("/")
+@login_required
 def index():
     # Temporary home page until login is built
     return render_template("index.html")
 
 
 @bp.route("/tickets")
+@login_required
 def tickets():
     return render_template("tickets.html")
 
