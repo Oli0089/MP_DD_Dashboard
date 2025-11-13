@@ -2,5 +2,37 @@
 {% block title %}Admin{% endblock %}
 {% block content %}
 <h1>Admin Panel</h1>
-<p>Manager tools will appear here</p>
+<div class="container mt-4">
+  <!-- Read-only table, change later to edit-->
+  <div class="table-responsive">
+    <table class="table table-striped align-middle">
+      <thead>
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Created</th>
+            <th>Last login</th>
+            <th>Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+            <td>{{ u.username }}</td>
+            <td>{{ u.email }}</td>
+            <td>{{ u.created_at.strftime('%Y-%m-%d') if u.created_at else '—' }}</td>
+            <td>{{ u.last_login.strftime('%Y-%m-%d %H:%M') if u.last_login else '—' }}</td>
+            <td>
+            {% set names = [] %}
+            {% for link in u.roles %}
+                {% if link.role %}{% set _ = names.append(link.role.name) %}{% endif %}
+            {% endfor %}
+            {{ names|join(", ") if names else "—" }}
+            </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}
