@@ -36,9 +36,45 @@ def admin():
         )
         return redirect(url_for("routes.index"))
 
-    users = User.query.all()
-    return render_template("admin.html", users=users)
 
+    # passing for table and dropdown
+    users = User.query.all()
+    roles = Role.query.all()
+    return render_template("admin.html", users=users, roles=roles)
+
+
+ # update a users role if admin
+@bp.route("/admin/update-role", methods=["POST"])
+@login_required
+def admin_update_role():
+    if not current_user.is_admin:
+        flash(
+            "You do not have permission to view that page.",
+            "danger",
+        )
+        return redirect(url_for("routes.index"))
+
+    user_id = request.form.get("user_id", type=int)
+    role_id = request.form.get("role_id", type=int)
+
+    # validate inputs exist
+    if not user_id or not role_id:
+        flash("Invalid form submission.", "danger")
+        return redirect(url_for("routes.admin"))
+
+    user = User.query.get(user_id)
+    role = Role.query.get(role_id)
+    if not user or not role:
+        flash("Invalid user or role.", "danger")
+        return redirect(url_for("routes.admin"))
+
+    # replace any existing, with the new one
+    UserRole.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+    db.session.add(UserRole(user_id=user.id, role_id=role.id))
+    db.session.commit()
+
+    flash(f"Updated {user.username} to role {role.name}.", "success")
+    return redirect(url_for("routes.admin"))
 
 # logic to login
 @bp.route("/login", methods=["GET", "POST"])

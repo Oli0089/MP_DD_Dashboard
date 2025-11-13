@@ -9,3 +9,16 @@
 @media (max-width: 991.98px) {
   .navbar .navbar-collapse .navbar-nav { margin-bottom: 0 !important; }
 }
+
+/* Flex layout for dropdown and button on same line */
+.role-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Keep dropdown compact */
+.role-cell .form-select {
+  width: auto !important;
+  min-width: 110px;
+}

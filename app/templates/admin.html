@@ -3,36 +3,40 @@
 {% block content %}
 <h1>Admin Panel</h1>
 <div class="container mt-4">
-  <!-- Read-only table, change later to edit-->
-  <div class="table-responsive">
+<div class="table-responsive">
     <table class="table table-striped align-middle">
-      <thead>
-        <tr>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Created</th>
-            <th>Last login</th>
-            <th>Role</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for u in users %}
-        <tr>
-            <td>{{ u.username }}</td>
-            <td>{{ u.email }}</td>
-            <td>{{ u.created_at.strftime('%Y-%m-%d') if u.created_at else '—' }}</td>
-            <td>{{ u.last_login.strftime('%Y-%m-%d %H:%M') if u.last_login else '—' }}</td>
-            <td>
-            {% set names = [] %}
-            {% for link in u.roles %}
-                {% if link.role %}{% set _ = names.append(link.role.name) %}{% endif %}
-            {% endfor %}
-            {{ names|join(", ") if names else "—" }}
-            </td>
-        </tr>
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Created</th>
+                <th>Last login</th>
+                <th>Role</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for u in users %}
+            <tr>
+                <td>{{ u.username }}</td>
+                <td>{{ u.email }}</td>
+                <td>{{ u.created_at.strftime('%Y-%m-%d') if u.created_at else '—' }}</td>
+                <td>{{ u.last_login.strftime('%Y-%m-%d %H:%M') if u.last_login else '—' }}</td>
+                <td>
+                <form method="post" action="{{ url_for('routes.admin_update_role') }}" class="role-cell m-0 p-0">
+                    <input type="hidden" name="user_id" value="{{ u.id }}">
+                    <select class="form-select form-select-sm" name="role_id" aria-label="Select role for {{ u.username }}">
+                        {% set current_role = (u.roles[0].role.name if u.roles and u.roles[0].role else None) %}
+                        {% for r in roles %}
+                        <option value="{{ r.id }}" {% if r.name == current_role %}selected{% endif %}>{{ r.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-sm btn-primary ms-1" type="submit">Update</button>
+                </form>
+                </td>
+            </tr>
         {% endfor %}
-      </tbody>
+        </tbody>
     </table>
-  </div>
+</div>
 </div>
 {% endblock %}

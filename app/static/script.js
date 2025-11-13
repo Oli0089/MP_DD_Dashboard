@@ -12,3 +12,4 @@ function showConfirm(message, onConfirm) {
 
   modal.show();
 }
+
