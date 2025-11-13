@@ -76,6 +76,33 @@ def admin_update_role():
     flash(f"Updated {user.username} to role {role.name}.", "success")
     return redirect(url_for("routes.admin"))
 
+# delete user logic
+@bp.route("/admin/delete-user", methods=["POST"])
+@login_required
+def admin_delete_user():
+
+    if not current_user.is_admin:
+        flash("You do not have permission to do that.", "danger")
+        return redirect(url_for("routes.index"))
+
+    user_id = request.form.get("user_id", type=int)
+    if user_id == current_user.id:
+        flash("You cannot delete your own account.", "warning")
+        return redirect(url_for("routes.admin"))
+
+    user = User.query.get(user_id)
+    if not user:
+        flash("User not found.", "danger")
+        return redirect(url_for("routes.admin"))
+
+    # remove role links, then user
+    UserRole.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+    db.session.delete(user)
+    db.session.commit()
+
+    flash(f"Deleted user {user.username}.", "success")
+    return redirect(url_for("routes.admin"))
+
 # logic to login
 @bp.route("/login", methods=["GET", "POST"])
 def login():
