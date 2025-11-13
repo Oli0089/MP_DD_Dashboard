@@ -36,14 +36,12 @@ def admin():
         )
         return redirect(url_for("routes.index"))
 
-
     # passing for table and dropdown
     users = User.query.all()
     roles = Role.query.all()
     return render_template("admin.html", users=users, roles=roles)
 
-
- # update a users role if admin
+# update a users role if admin
 @bp.route("/admin/update-role", methods=["POST"])
 @login_required
 def admin_update_role():
@@ -76,6 +74,7 @@ def admin_update_role():
     flash(f"Updated {user.username} to role {role.name}.", "success")
     return redirect(url_for("routes.admin"))
 
+
 # delete user logic
 @bp.route("/admin/delete-user", methods=["POST"])
 @login_required
@@ -102,6 +101,7 @@ def admin_delete_user():
 
     flash(f"Deleted user {user.username}.", "success")
     return redirect(url_for("routes.admin"))
+
 
 # logic to login
 @bp.route("/login", methods=["GET", "POST"])
