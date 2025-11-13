@@ -36,8 +36,72 @@ def admin():
         )
         return redirect(url_for("routes.index"))
 
+    # passing for table and dropdown
     users = User.query.all()
-    return render_template("admin.html", users=users)
+    roles = Role.query.all()
+    return render_template("admin.html", users=users, roles=roles)
+
+
+# update a users role if admin
+@bp.route("/admin/update-role", methods=["POST"])
+@login_required
+def admin_update_role():
+    if not current_user.is_admin:
+        flash(
+            "You do not have permission to view that page.",
+            "danger",
+        )
+        return redirect(url_for("routes.index"))
+
+    user_id = request.form.get("user_id", type=int)
+    role_id = request.form.get("role_id", type=int)
+
+    # validate inputs exist
+    if not user_id or not role_id:
+        flash("Invalid form submission.", "danger")
+        return redirect(url_for("routes.admin"))
+
+    user = User.query.get(user_id)
+    role = Role.query.get(role_id)
+    if not user or not role:
+        flash("Invalid user or role.", "danger")
+        return redirect(url_for("routes.admin"))
+
+    # replace any existing, with the new one
+    UserRole.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+    db.session.add(UserRole(user_id=user.id, role_id=role.id))
+    db.session.commit()
+
+    flash(f"Updated {user.username} to role {role.name}.", "success")
+    return redirect(url_for("routes.admin"))
+
+
+# delete user logic
+@bp.route("/admin/delete-user", methods=["POST"])
+@login_required
+def admin_delete_user():
+
+    if not current_user.is_admin:
+        flash("You do not have permission to do that.", "danger")
+        return redirect(url_for("routes.index"))
+
+    user_id = request.form.get("user_id", type=int)
+    if user_id == current_user.id:
+        flash("You cannot delete your own account.", "warning")
+        return redirect(url_for("routes.admin"))
+
+    user = User.query.get(user_id)
+    if not user:
+        flash("User not found.", "danger")
+        return redirect(url_for("routes.admin"))
+
+    # remove role links, then user
+    UserRole.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+    db.session.delete(user)
+    db.session.commit()
+
+    flash(f"Deleted user {user.username}.", "success")
+    return redirect(url_for("routes.admin"))
 
 
 # logic to login
