@@ -41,6 +41,7 @@ def admin():
     roles = Role.query.all()
     return render_template("admin.html", users=users, roles=roles)
 
+
 # update a users role if admin
 @bp.route("/admin/update-role", methods=["POST"])
 @login_required
