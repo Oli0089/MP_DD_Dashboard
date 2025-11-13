@@ -36,7 +36,8 @@ def admin():
         )
         return redirect(url_for("routes.index"))
 
-    return render_template("admin.html")
+    users = User.query.all()
+    return render_template("admin.html", users=users)
 
 
 # logic to login
