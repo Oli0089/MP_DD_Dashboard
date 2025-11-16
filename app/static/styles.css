@@ -22,3 +22,10 @@
   width: auto !important;
   min-width: 110px;
 }
+
+/* admin users table shrink to fit its content */
+.table-responsive .admin-table {
+    margin-left: auto;
+    margin-right: auto;
+}
+

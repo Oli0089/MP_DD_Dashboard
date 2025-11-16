@@ -104,12 +104,11 @@ def admin_delete_user():
         flash("User not found.", "danger")
         return redirect(url_for("routes.admin"))
 
-    # remove role links, then user
-    UserRole.query.filter_by(user_id=user.id).delete(synchronize_session=False)
-    db.session.delete(user)
+    # deactive user rather than delete
+    user.is_active = False
     db.session.commit()
 
-    flash(f"Deleted user {user.username}.", "success")
+    flash(f"User {user.username} has been deactivated.", "success")
     return redirect(url_for("routes.admin"))
 
 
@@ -138,6 +137,11 @@ def login():
 
             flash("Logged in successfully.", "success")
             return redirect(url_for("routes.index"))
+
+        # block login if deactivated
+        if not user.is_active:
+            flash("Your account has been deactivated. Please contact an administrator.", "danger")
+            return redirect(url_for("routes.login"))
 
         # otherwise show an error
         flash("Invalid username or password.", "danger")

@@ -2,14 +2,13 @@
 {% block title %}Admin{% endblock %}
 {% block content %}
 <h1>Admin Panel</h1>
-<div class="container mt-4">
 <div class="table-responsive">
-    <table class="table table-striped align-middle">
+    <table class="table table-striped align-middle admin-table">
         <thead>
             <tr>
                 <th>Username</th>
                 <th>Email</th>
-                <th>Created</th>
+                <th>Active</th>
                 <th>Last login</th>
                 <th>Role</th>
                 <th>Actions</th>
@@ -20,7 +19,13 @@
             <tr>
                 <td>{{ u.username }}</td>
                 <td>{{ u.email }}</td>
-                <td>{{ u.created_at.strftime('%Y-%m-%d') if u.created_at else '—' }}</td>
+                <td>
+                    {% if u.is_active %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Deactivated</span>
+                    {% endif %}
+                </td>
                 <td>{{ u.last_login.strftime('%Y-%m-%d %H:%M') if u.last_login else '—' }}</td>
                 <td>
                 <!-- Show current roles, drop down with button to change roles functionality -->
@@ -49,7 +54,7 @@
                     <input type="hidden" name="user_id" value="{{ u.id }}">
                     <button type="submit" class="btn btn-sm btn-danger"
                             onclick="return confirm('Delete {{ u.username }}? This cannot be undone.');">
-                        Delete
+                        Deactivate
                     </button>
                     </form>
                 {% else %}
@@ -60,6 +65,5 @@
         {% endfor %}
         </tbody>
     </table>
-</div>
 </div>
 {% endblock %}
