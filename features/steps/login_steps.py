@@ -5,7 +5,7 @@ from behave import when, then
 
 
 @when(
-    'I submit the login form with username "{username}"'
+    'I submit the login form with username "{username}" '
     'and password "{password}"'
 )
 def step_submit_login_form(context, username, password):

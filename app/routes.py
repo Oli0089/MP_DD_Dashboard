@@ -130,6 +130,14 @@ def login():
 
         user = User.query.filter_by(username=username).first()
 
+        # block login if deactivated
+        if user and not user.is_active:
+            flash(
+                "Your account has been deactivated. Please contact Admin.",
+                "danger",
+            )
+            return redirect(url_for("routes.login"))
+
         # if the user exists and password matches, log them in
         if user and check_password_hash(user.password, password):
             login_user(user)
@@ -140,14 +148,6 @@ def login():
 
             flash("Logged in successfully.", "success")
             return redirect(url_for("routes.index"))
-
-        # block login if deactivated
-        if not user.is_active:
-            flash(
-                "Your account has been deactivated. Please contact Admin.",
-                "danger",
-            )
-            return redirect(url_for("routes.login"))
 
         # otherwise show an error
         flash("Invalid username or password.", "danger")
