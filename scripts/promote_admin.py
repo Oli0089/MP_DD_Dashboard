@@ -2,11 +2,15 @@ import os
 import sys
 from app import create_app, db
 from app.models import User, Role, UserRole
-sys.path.insert(0,os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(
+    0,
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
+)
 
 
 # Change to username wanting to be admin
 USERNAME = "OliverKeeys"
+
 
 # Used for testing to update a user as admin
 def main():
