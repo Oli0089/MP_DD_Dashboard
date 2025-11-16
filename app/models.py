@@ -1,7 +1,6 @@
 # app/models.py
 from datetime import datetime
 from . import db
-from sqlalchemy import Boolean
 # Database basics used from Lvl 5 Module
 
 

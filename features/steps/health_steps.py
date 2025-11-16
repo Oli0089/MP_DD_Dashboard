@@ -1,6 +1,5 @@
 # features/steps/health_steps.py
 from behave import given, when, then
-from app import create_app
 
 
 @given("the app is initialised")

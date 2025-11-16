@@ -51,6 +51,7 @@ def test_logout_redirects_to_login(client):
     assert response.status_code == 302
     assert "/login" in response.headers["Location"]
 
+
 def test_register_rejects_spaces_only_password(client):
     # send a register POST with spaces as a password
     response = client.post(
