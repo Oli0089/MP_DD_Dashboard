@@ -67,6 +67,15 @@ def admin_update_role():
         flash("Invalid user or role.", "danger")
         return redirect(url_for("routes.admin"))
 
+    # if user is already in this role, do nothing
+    existing_link = UserRole.query.filter_by(
+        user_id=user.id,
+        role_id=role.id,
+    ).first()
+    if existing_link:
+        flash(f"{user.username} is already in role {role.name}. No changes made.", "info")
+        return redirect(url_for("routes.admin"))
+
     # replace any existing, with the new one
     UserRole.query.filter_by(user_id=user.id).delete(synchronize_session=False)
     db.session.add(UserRole(user_id=user.id, role_id=role.id))
@@ -153,6 +162,11 @@ def register():
         if not username or not email or not password or not confirm_password:
             flash("Please fill in all fields.", "danger")
             return redirect(url_for("routes.register"))
+
+        # check to stop blank spaces as a password
+        if not password.strip() or not confirm_password.strip():
+            flash("Password cannot be empty or spaces only.", "danger")
+            return redirect(url_for("auth.register"))
 
         # passwords must match
         if password != confirm_password:
