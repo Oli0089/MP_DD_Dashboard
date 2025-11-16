@@ -88,7 +88,7 @@ def admin_update_role():
     return redirect(url_for("routes.admin"))
 
 
-# delete user logic
+# deactivate user logic
 @bp.route("/admin/delete-user", methods=["POST"])
 @login_required
 def admin_delete_user():
@@ -99,7 +99,7 @@ def admin_delete_user():
 
     user_id = request.form.get("user_id", type=int)
     if user_id == current_user.id:
-        flash("You cannot delete your own account.", "warning")
+        flash("You cannot deactivate your own account.", "warning")
         return redirect(url_for("routes.admin"))
 
     user = User.query.get(user_id)

@@ -30,7 +30,7 @@
         {% if current_user.is_authenticated %}
           <li class="nav-item">
             <a class="nav-link{% if request.endpoint == 'routes.tickets' %} active{% endif %}"
-              href="{{ url_for('routes.tickets') }}">Tickets</a>
+              href="{{ url_for('routes.tickets') }}">Comparison</a>
           </li>
         {% endif %}
       </ul>
