@@ -11,7 +11,10 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 def client():
     # Test client to make fake requests
     app = create_app()
-    app.config.update(TESTING=True)
+    app.config.update(
+        TESTING=True,
+        WTF_CSRF_ENABLED=False,
+    )
     with app.test_client() as c:
         yield c
 
@@ -47,3 +50,19 @@ def test_logout_redirects_to_login(client):
     response = client.get("/logout", follow_redirects=False)
     assert response.status_code == 302
     assert "/login" in response.headers["Location"]
+
+
+def test_register_rejects_spaces_only_password(client):
+    # send a register POST with spaces as a password
+    response = client.post(
+        "/register",
+        data={
+            "username": "test_user_spaces",
+            "email": "spaces@example.com",
+            "password": "   ",
+            "confirm_password": "   ",
+        },
+        follow_redirects=True,
+    )
+    # expect the validation message to appear
+    assert b"Password cannot be empty or spaces only" in response.data

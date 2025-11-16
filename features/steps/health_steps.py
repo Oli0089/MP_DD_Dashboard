@@ -1,13 +1,11 @@
 # features/steps/health_steps.py
 from behave import given, when, then
-from app import create_app
 
 
 @given("the app is initialised")
 def step_app_initialised(context):
-    # Creates a test instance
-    app = create_app()
-    context.client = app.test_client()
+    # App and test client are now set up in environment.py
+    pass
 
 
 @when('I GET "/health"')

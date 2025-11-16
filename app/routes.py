@@ -67,6 +67,18 @@ def admin_update_role():
         flash("Invalid user or role.", "danger")
         return redirect(url_for("routes.admin"))
 
+    # if user is already in this role, do nothing
+    existing_link = UserRole.query.filter_by(
+        user_id=user.id,
+        role_id=role.id,
+    ).first()
+    if existing_link:
+        flash(
+            f"No change: {user.username} already has this role.",
+            "info",
+        )
+        return redirect(url_for("routes.admin"))
+
     # replace any existing, with the new one
     UserRole.query.filter_by(user_id=user.id).delete(synchronize_session=False)
     db.session.add(UserRole(user_id=user.id, role_id=role.id))
@@ -95,12 +107,11 @@ def admin_delete_user():
         flash("User not found.", "danger")
         return redirect(url_for("routes.admin"))
 
-    # remove role links, then user
-    UserRole.query.filter_by(user_id=user.id).delete(synchronize_session=False)
-    db.session.delete(user)
+    # deactive user rather than delete
+    user.is_active = False
     db.session.commit()
 
-    flash(f"Deleted user {user.username}.", "success")
+    flash(f"User {user.username} has been deactivated.", "success")
     return redirect(url_for("routes.admin"))
 
 
@@ -118,6 +129,14 @@ def login():
             return redirect(url_for("routes.login"))
 
         user = User.query.filter_by(username=username).first()
+
+        # block login if deactivated
+        if user and not user.is_active:
+            flash(
+                "Your account has been deactivated. Please contact Admin.",
+                "danger",
+            )
+            return redirect(url_for("routes.login"))
 
         # if the user exists and password matches, log them in
         if user and check_password_hash(user.password, password):
@@ -153,6 +172,11 @@ def register():
         if not username or not email or not password or not confirm_password:
             flash("Please fill in all fields.", "danger")
             return redirect(url_for("routes.register"))
+
+        # check to stop blank spaces as a password
+        if not password.strip() or not confirm_password.strip():
+            flash("Password cannot be empty or spaces only.", "danger")
+            return redirect(url_for("auth.register"))
 
         # passwords must match
         if password != confirm_password:

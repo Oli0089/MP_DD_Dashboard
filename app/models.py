@@ -31,6 +31,9 @@ class User(db.Model):
     )
     last_login = db.Column(db.DateTime, nullable=True)
 
+    # Flag to soft-deactivate accounts instead of hard deleting
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+
     # links to roles table
     roles = db.relationship(
         "UserRole",
@@ -59,11 +62,6 @@ class User(db.Model):
             link.role and link.role.name == "Admin"
             for link in self.roles
         )
-
-    # needed for flask-login logic
-    @property
-    def is_active(self):
-        return True
 
     def get_id(self):
         return str(self.id)

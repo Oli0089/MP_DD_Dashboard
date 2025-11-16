@@ -4,10 +4,13 @@ from flask import Flask, jsonify
 from app.auth import auth
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
 
 db = SQLAlchemy()
 
 login_manager = LoginManager()
+
+csrf = CSRFProtect()  # CSRF protection for forms
 
 
 def create_app(test_config=None):
@@ -15,6 +18,9 @@ def create_app(test_config=None):
 
     # to be updated
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
+
+    # protection on post forms
+    csrf.init_app(app)
 
     # database URL
     # set on Render for Postgres
