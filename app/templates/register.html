@@ -7,6 +7,7 @@
   <h1>Register</h1>
   <!-- For testing changed to routes as auth isn't set up yet -->
   <form method="POST" action="{{ url_for('routes.register') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="mb-3">
       <label for="username" class="form-label">Username</label>
       <input type="text" class="form-control" id="username" name="username" required>
