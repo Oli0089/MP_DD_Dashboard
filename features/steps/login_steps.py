@@ -1,5 +1,4 @@
 from behave import when, then
-from flask import url_for
 
 
 # given step is already set up in health_step

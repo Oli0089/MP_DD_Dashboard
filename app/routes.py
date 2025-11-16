@@ -73,7 +73,9 @@ def admin_update_role():
         role_id=role.id,
     ).first()
     if existing_link:
-        flash(f"{user.username} is already in role {role.name}. No changes made.", "info")
+        flash(f"{user.username} is already in role {role.name}. No changes made.",
+               "info"
+            )
         return redirect(url_for("routes.admin"))
 
     # replace any existing, with the new one
@@ -140,7 +142,9 @@ def login():
 
         # block login if deactivated
         if not user.is_active:
-            flash("Your account has been deactivated. Please contact an administrator.", "danger")
+            flash("Your account has been deactivated. Please contact an administrator.",
+                "danger"
+                )
             return redirect(url_for("routes.login"))
 
         # otherwise show an error
