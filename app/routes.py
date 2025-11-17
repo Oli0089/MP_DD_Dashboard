@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, current_user
 
 from app import db
-from app.models import User, Role, UserRole
+from app.models import User, Role, UserRole, Ticket
 
 
 bp = Blueprint("routes", __name__)
@@ -24,7 +24,26 @@ def index():
 @bp.route("/tickets")
 @login_required
 def tickets():
-    return render_template("tickets.html")
+    # show tickets in three groups for the buddy board.
+    # newest tickets first so the queue makes sense to testers
+    all_tickets = Ticket.query.order_by(Ticket.created_at.desc()).all()
+
+    tickets_by_status = {
+        "ready_for_buddy": [
+            t for t in all_tickets if t.status == "ready_for_buddy"
+        ],
+        "buddied": [
+            t for t in all_tickets if t.status == "buddied"
+        ],
+        "deleted": [
+            t for t in all_tickets if t.status == "deleted"
+        ],
+    }
+
+    return render_template(
+        "tickets.html",
+        tickets_by_status=tickets_by_status,
+    )
 
 
 # admins only

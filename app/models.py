@@ -63,6 +63,15 @@ class User(db.Model):
             for link in self.roles
         )
 
+    # return guest users for read only access
+    @property
+    def is_guest(self):
+        #Return True if the user has the Guest role
+        return any(
+            link.role and link.role.name == "Guest"
+            for link in self.roles
+        )
+
     def get_id(self):
         return str(self.id)
 
@@ -98,7 +107,15 @@ class Ticket(db.Model):
     external_ref = db.Column(db.String(50), nullable=False)
 
     title = db.Column(db.String(200), nullable=False)
-    status = db.Column(db.String(20), nullable=False, default="open")
+
+    # used for the board columns:
+    # ready_for_buddy, buddied and deleted
+    status = db.Column(
+        db.String(20),
+        nullable=False,
+        default="ready_for_buddy",
+    )
+
     created_at = db.Column(
         db.DateTime,
         default=datetime.utcnow
