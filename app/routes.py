@@ -11,6 +11,8 @@ from app.models import User, Role, UserRole
 
 bp = Blueprint("routes", __name__)
 
+MIN_PASSWORD_LENGTH = 8
+
 
 @bp.route("/")
 @login_required
@@ -177,6 +179,25 @@ def register():
         if not password.strip() or not confirm_password.strip():
             flash("Password cannot be empty or spaces only.", "danger")
             return redirect(url_for("auth.register"))
+
+        # minimum length for the password
+        if len(password.strip()) < MIN_PASSWORD_LENGTH:
+            flash(
+                f"Password must be at least {MIN_PASSWORD_LENGTH} characters long.",
+                "danger",
+            )
+            return redirect(url_for("routes.register"))
+
+        # password must contain at least one letter and one number
+        has_letter = any(c.isalpha() for c in password)
+        has_number = any(c.isdigit() for c in password)
+
+        if not (has_letter and has_number):
+            flash(
+                "Password must contain at least one letter and one number.",
+                "danger"
+            )
+            return redirect(url_for("routes.register"))
 
         # passwords must match
         if password != confirm_password:
