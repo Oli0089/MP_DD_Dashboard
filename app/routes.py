@@ -36,8 +36,11 @@ def tickets():
         title = request.form.get("title", "").strip()
 
         if not external_ref or not title:
-            flash("Please fill in both the Jira reference and description.", "danger")
-            return redirect(url_for("routes.tickets"))
+            msg = (
+                "Please fill in both the Jira reference and "
+                "description."
+            )
+            flash(msg, "danger")
 
         # create a new ticket to the board
         # status defaults to "ready_for_buddy" in the model
