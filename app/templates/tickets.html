@@ -5,13 +5,45 @@
 <h1 class="mb-2">Buddy tickets</h1>
 
 {% if not current_user.is_guest %}
-  <p class="mb-4">
-    <a href="#create-ticket"
-       class="btn btn-primary btn-sm"
-       style="white-space: nowrap;">
-      Create ticket
-    </a>
-  </p>
+<div id="create-ticket" class="card mb-4 shadow-sm">
+  <div class="card-body">
+    <h2 class="h5 mb-3">Add a ticket ready for buddy</h2>
+    <p class="small text-muted">
+      Use this form when a ticket already exists in Jira and is now ready to be
+      buddied. This adds it into the buddy queue only – Jira remains the system of record.
+    </p>
+
+    <form method="post" action="{{ url_for('routes.tickets') }}" class="row g-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="col-md-4">
+        <label for="external_ref" class="form-label">Jira reference</label>
+        <input type="text"
+                class="form-control"
+                id="external_ref"
+                name="external_ref"
+                required>
+        <div class="form-text">
+          Example: MOTOR-1234
+        </div>
+      </div>
+
+      <div class="col-md-8">
+        <label for="title" class="form-label">Short description</label>
+        <input type="text"
+                class="form-control"
+                id="title"
+                name="title"
+                required>
+      </div>
+
+      <div class="col-12 text-end">
+        <button type="submit" class="btn btn-primary">
+          Add to buddy queue
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 {% endif %}
 
 <div class="row">
@@ -19,10 +51,34 @@
   <div class="col-lg-4 mb-4">
     <h2 class="h5">Ready to buddy</h2>
     {% if tickets_by_status.ready_for_buddy %}
-      <p class="text-muted small">
-        {{ tickets_by_status.ready_for_buddy|length }} ticket(s) waiting.
-      </p>
-      <!-- Cards to be added for tickets -->
+    <p class="text-muted small">
+      Showing up to 5 of {{ tickets_by_status.ready_for_buddy|length }} ticket(s) waiting.
+    </p>
+      {% for ticket in tickets_by_status.ready_for_buddy[:5] %}
+        <div class="card mb-3 shadow-sm">
+          <div class="card-body">
+            <h3 class="h6 mb-1">{{ ticket.title }}</h3>
+            <p class="text-muted small mb-1">
+              Jira: {{ ticket.external_ref }}
+            </p>
+
+            {% if ticket.ready_at %}
+              <p class="text-muted small mb-1">
+                Ready since {{ ticket.ready_at.strftime("%d/%m/%Y %H:%M") }}
+              </p>
+            {% endif %}
+
+            <p class="text-muted small mb-1">
+              Added by {{ ticket.creator.username }}
+            </p>
+
+            {# Button will later mark this as buddied #}
+            <button class="btn btn-sm btn-outline-primary" disabled>
+              Mark as buddied - need to add
+            </button>
+          </div>
+        </div>
+      {% endfor %}
     {% else %}
       <p class="text-muted small">No tickets are currently waiting for buddy review.</p>
     {% endif %}

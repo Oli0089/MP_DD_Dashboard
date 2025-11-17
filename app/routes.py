@@ -21,7 +21,7 @@ def index():
     return render_template("index.html")
 
 
-@bp.route("/tickets")
+@bp.route("/tickets", methods=["GET", "POST"])
 @login_required
 def tickets():
 
@@ -48,6 +48,7 @@ def tickets():
             external_ref=external_ref,
             title=title,
             created_by_id=current_user.id,
+            ready_at=datetime.utcnow(),
         )
         db.session.add(ticket)
         db.session.commit()
@@ -57,7 +58,7 @@ def tickets():
 
     # show tickets in three groups for the buddy board.
     # newest tickets first so the queue makes sense to testers
-    all_tickets = Ticket.query.order_by(Ticket.created_at.desc()).all()
+    all_tickets = Ticket.query.order_by(Ticket.created_at.asc()).all()
 
     tickets_by_status = {
         "ready_for_buddy": [
