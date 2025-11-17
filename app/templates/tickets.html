@@ -1,6 +1,58 @@
 {% extends "base.html" %}
 {% block title %}Tickets{% endblock %}
 {% block content %}
-<h1>Tickets Page</h1>
-<p>This page will show buddy tickets soon</p>
+
+<h1 class="mb-2">Buddy tickets</h1>
+
+{% if not current_user.is_guest %}
+  <p class="mb-4">
+    <a href="#create-ticket"
+       class="btn btn-primary btn-sm"
+       style="white-space: nowrap;">
+      Create ticket
+    </a>
+  </p>
+{% endif %}
+
+<div class="row">
+  <!-- Column 1: Ready to buddy -->
+  <div class="col-lg-4 mb-4">
+    <h2 class="h5">Ready to buddy</h2>
+    {% if tickets_by_status.ready_for_buddy %}
+      <p class="text-muted small">
+        {{ tickets_by_status.ready_for_buddy|length }} ticket(s) waiting.
+      </p>
+      <!-- Cards to be added for tickets -->
+    {% else %}
+      <p class="text-muted small">No tickets are currently waiting for buddy review.</p>
+    {% endif %}
+  </div>
+
+  <!-- Column 2: Buddied -->
+  <div class="col-lg-4 mb-4">
+    <h2 class="h5">Buddied</h2>
+    {% if tickets_by_status.buddied %}
+      <p class="text-muted small">
+        {{ tickets_by_status.buddied|length }} ticket(s) have been buddied.
+      </p>
+      <!-- Cards to be added for tickets -->
+    {% else %}
+      <p class="text-muted small">No tickets have been marked as buddied yet.</p>
+    {% endif %}
+  </div>
+
+  <!-- Column 3: Deleted -->
+  <div class="col-lg-4 mb-4">
+    <h2 class="h5">Deleted</h2>
+    {% if tickets_by_status.deleted %}
+      <p class="text-muted small">
+        {{ tickets_by_status.deleted|length }} ticket(s) have been deleted.
+      </p>
+      <!-- Cards to be added for tickets -->
+    {% else %}
+      <p class="text-muted small">No tickets have been deleted.</p>
+    {% endif %}
+  </div>
+</div>
+
 {% endblock %}

@@ -6,10 +6,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, current_user
 
 from app import db
-from app.models import User, Role, UserRole
+from app.models import User, Role, UserRole, Ticket
 
 
 bp = Blueprint("routes", __name__)
+
+MIN_PASSWORD_LENGTH = 8
 
 
 @bp.route("/")
@@ -22,7 +24,57 @@ def index():
 @bp.route("/tickets")
 @login_required
 def tickets():
-    return render_template("tickets.html")
+
+    if request.method == "POST":
+        # guest users are read-only: they can see tickets but not add them
+        if current_user.is_guest:
+            flash("Guest users cannot create tickets.", "warning")
+            return redirect(url_for("routes.tickets"))
+
+        # take the Jira reference and short description from the form
+        external_ref = request.form.get("external_ref", "").strip()
+        title = request.form.get("title", "").strip()
+
+        if not external_ref or not title:
+            msg = (
+                "Please fill in both the Jira reference and "
+                "description."
+            )
+            flash(msg, "danger")
+
+        # create a new ticket to the board
+        # status defaults to "ready_for_buddy" in the model
+        ticket = Ticket(
+            external_ref=external_ref,
+            title=title,
+            created_by_id=current_user.id,
+        )
+        db.session.add(ticket)
+        db.session.commit()
+
+        flash("Ticket added to the buddy queue.", "success")
+        return redirect(url_for("routes.tickets"))
+
+    # show tickets in three groups for the buddy board.
+    # newest tickets first so the queue makes sense to testers
+    all_tickets = Ticket.query.order_by(Ticket.created_at.desc()).all()
+
+    tickets_by_status = {
+        "ready_for_buddy": [
+            t for t in all_tickets if t.status == "ready_for_buddy"
+        ],
+        "buddied": [
+            t for t in all_tickets if t.status == "buddied"
+        ],
+        "deleted": [
+            t for t in all_tickets if t.status == "deleted"
+        ],
+    }
+
+    return render_template(
+        "tickets.html",
+        tickets_by_status=tickets_by_status,
+    )
 
 
 # admins only
@@ -88,7 +140,7 @@ def admin_update_role():
     return redirect(url_for("routes.admin"))
 
 
-# delete user logic
+# deactivate user logic
 @bp.route("/admin/delete-user", methods=["POST"])
 @login_required
 def admin_delete_user():
@@ -99,7 +151,7 @@ def admin_delete_user():
 
     user_id = request.form.get("user_id", type=int)
     if user_id == current_user.id:
-        flash("You cannot delete your own account.", "warning")
+        flash("You cannot deactivate your own account.", "warning")
         return redirect(url_for("routes.admin"))
 
     user = User.query.get(user_id)
@@ -177,6 +229,26 @@ def register():
         if not password.strip() or not confirm_password.strip():
             flash("Password cannot be empty or spaces only.", "danger")
             return redirect(url_for("auth.register"))
+
+        # minimum length for the password
+        if len(password.strip()) < MIN_PASSWORD_LENGTH:
+            msg = (
+                f"Password must be at least "
+                f"{MIN_PASSWORD_LENGTH} characters long."
+            )
+            flash(msg, "danger")
+            return redirect(url_for("routes.register"))
+
+        # password must contain at least one letter and one number
+        has_letter = any(c.isalpha() for c in password)
+        has_number = any(c.isdigit() for c in password)
+
+        if not (has_letter and has_number):
+            flash(
+                "Password must contain at least one letter and one number.",
+                "danger"
+            )
+            return redirect(url_for("routes.register"))
 
         # passwords must match
         if password != confirm_password:

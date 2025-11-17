@@ -47,16 +47,20 @@
                 <td>
                     <button type="submit" class="btn btn-sm btn-primary me-2"
                         form="roleform-{{ u.id }}">Update</button>
-                <!-- Delete button, hidden for user -->
+                <!-- Deactivate button, hidden for user -->
                 {% if current_user.is_admin and u.id != current_user.id %}
-                    <form method="post" action="{{ url_for('routes.admin_delete_user') }}" class="m-0 p-0 d-inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="user_id" value="{{ u.id }}">
-                    <button type="submit" class="btn btn-sm btn-danger"
-                            onclick="return confirm('Delete {{ u.username }}? This cannot be undone.');">
-                        Deactivate
-                    </button>
-                    </form>
+                    {% if u.is_active %}
+                        <form method="post" action="{{ url_for('routes.admin_delete_user') }}" class="m-0 p-0 d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="user_id" value="{{ u.id }}">
+                            <button type="submit" class="btn btn-sm btn-danger"
+                                    onclick="return confirm('Deactivate {{ u.username }}? This cannot be undone.');">
+                                Deactivate
+                            </button>
+                        </form>
+                    {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
                 {% else %}
                     <span class="text-muted">—</span>
                 {% endif %}
