@@ -26,6 +26,11 @@ def index():
 def tickets():
 
     if request.method == "POST":
+        import re
+
+        # jira reference must match MOTOR-12345 (1 to 5 digits)
+        pattern = r"^MOTOR-\d{1,5}$"
+
         # guest users are read-only: they can see tickets but not add them
         if current_user.is_guest:
             flash("Guest users cannot create tickets.", "warning")
@@ -41,6 +46,30 @@ def tickets():
                 "description."
             )
             flash(msg, "danger")
+
+        # Short description must be under 20 characters
+        if len(title) > 20:
+            flash("Short description must be under 20 characters", "danger")
+            return redirect(url_for("routes.tickets"))
+
+        if not re.match(pattern, external_ref.upper()):
+            flash("Jira format must follow MOTOR-.", "danger")
+            return redirect(url_for("routes.tickets"))
+
+        # Prevent duplicate Jira references
+        existing = Ticket.query.filter(
+            Ticket.external_ref == external_ref.upper(),
+            Ticket.status != "deleted",
+        ).first()
+
+        if existing:
+            flash(
+                "This Jira reference is already in the buddy workflow.",
+                "danger",
+            )
+            return redirect(url_for("routes.tickets"))
+
+        external_ref = external_ref.upper()
 
         # create a new ticket to the board
         # status defaults to "ready_for_buddy" in the model
