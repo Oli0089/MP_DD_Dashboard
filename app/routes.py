@@ -24,6 +24,34 @@ def index():
 @bp.route("/tickets")
 @login_required
 def tickets():
+
+    if request.method == "POST":
+        # guest users are read-only: they can see tickets but not add them
+        if current_user.is_guest:
+            flash("Guest users cannot create tickets.", "warning")
+            return redirect(url_for("routes.tickets"))
+
+        # take the Jira reference and short description from the form
+        external_ref = request.form.get("external_ref", "").strip()
+        title = request.form.get("title", "").strip()
+
+        if not external_ref or not title:
+            flash("Please fill in both the Jira reference and description.", "danger")
+            return redirect(url_for("routes.tickets"))
+
+        # create a new ticket to the board
+        # status defaults to "ready_for_buddy" in the model
+        ticket = Ticket(
+            external_ref=external_ref,
+            title=title,
+            created_by_id=current_user.id,
+        )
+        db.session.add(ticket)
+        db.session.commit()
+
+        flash("Ticket added to the buddy queue.", "success")
+        return redirect(url_for("routes.tickets"))
+
     # show tickets in three groups for the buddy board.
     # newest tickets first so the queue makes sense to testers
     all_tickets = Ticket.query.order_by(Ticket.created_at.desc()).all()

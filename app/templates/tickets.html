@@ -2,7 +2,17 @@
 {% block title %}Tickets{% endblock %}
 {% block content %}
 
-<h1 class="mb-4">Buddy tickets</h1>
+<h1 class="mb-2">Buddy tickets</h1>
+
+{% if not current_user.is_guest %}
+  <p class="mb-4">
+    <a href="#create-ticket"
+       class="btn btn-primary btn-sm"
+       style="white-space: nowrap;">
+      Create ticket
+    </a>
+  </p>
+{% endif %}
 
 <div class="row">
   <!-- Column 1: Ready to buddy -->

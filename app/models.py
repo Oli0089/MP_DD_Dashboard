@@ -66,10 +66,13 @@ class User(db.Model):
     # return guest users for read only access
     @property
     def is_guest(self):
-        #Return True if the user has the Guest role
-        return any(
-            link.role and link.role.name == "Guest"
-            for link in self.roles
+        # true if user has Guest and is not an Admin
+        return (
+            any(
+                link.role and link.role.name == "Guest"
+                for link in self.roles
+            )
+            and not self.is_admin
         )
 
     def get_id(self):
