@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, current_user
 
 from app import db
-from app.models import User, Role, UserRole
+from app.models import User, Role, UserRole, Ticket
 
 
 bp = Blueprint("routes", __name__)
@@ -24,7 +24,57 @@ def index():
 @bp.route("/tickets")
 @login_required
 def tickets():
-    return render_template("tickets.html")
+
+    if request.method == "POST":
+        # guest users are read-only: they can see tickets but not add them
+        if current_user.is_guest:
+            flash("Guest users cannot create tickets.", "warning")
+            return redirect(url_for("routes.tickets"))
+
+        # take the Jira reference and short description from the form
+        external_ref = request.form.get("external_ref", "").strip()
+        title = request.form.get("title", "").strip()
+
+        if not external_ref or not title:
+            msg = (
+                "Please fill in both the Jira reference and "
+                "description."
+            )
+            flash(msg, "danger")
+
+        # create a new ticket to the board
+        # status defaults to "ready_for_buddy" in the model
+        ticket = Ticket(
+            external_ref=external_ref,
+            title=title,
+            created_by_id=current_user.id,
+        )
+        db.session.add(ticket)
+        db.session.commit()
+
+        flash("Ticket added to the buddy queue.", "success")
+        return redirect(url_for("routes.tickets"))
+
+    # show tickets in three groups for the buddy board.
+    # newest tickets first so the queue makes sense to testers
+    all_tickets = Ticket.query.order_by(Ticket.created_at.desc()).all()
+
+    tickets_by_status = {
+        "ready_for_buddy": [
+            t for t in all_tickets if t.status == "ready_for_buddy"
+        ],
+        "buddied": [
+            t for t in all_tickets if t.status == "buddied"
+        ],
+        "deleted": [
+            t for t in all_tickets if t.status == "deleted"
+        ],
+    }
+
+    return render_template(
+        "tickets.html",
+        tickets_by_status=tickets_by_status,
+    )
 
 
 # admins only
