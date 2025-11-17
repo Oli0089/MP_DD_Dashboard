@@ -1,5 +1,4 @@
 from behave import given, when, then
-from werkzeug.security import generate_password_hash
 
 
 # given step is already set up in health_step
@@ -23,8 +22,8 @@ def step_should_see_text(context, text):
     # Check that the expected message is present in the response
     assert text.encode() in context.response.data
 
-# Test 2, happy path
 
+# Test 2, happy path
 @given('a user exists with username "{username}" and password "{password}"')
 def step_create_user(context, username, password):
     # Create a user through registration route
@@ -39,6 +38,7 @@ def step_create_user(context, username, password):
         },
         follow_redirects=True,
     )
+
 
 @when('I log in with username "{username}" and password "{password}"')
 def step_login_with_credentials(context, username, password):

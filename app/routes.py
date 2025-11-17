@@ -182,10 +182,11 @@ def register():
 
         # minimum length for the password
         if len(password.strip()) < MIN_PASSWORD_LENGTH:
-            flash(
-                f"Password must be at least {MIN_PASSWORD_LENGTH} characters long.",
-                "danger",
+            msg = (
+                f"Password must be at least "
+                f"{MIN_PASSWORD_LENGTH} characters long."
             )
+            flash(msg, "danger")
             return redirect(url_for("routes.register"))
 
         # password must contain at least one letter and one number
