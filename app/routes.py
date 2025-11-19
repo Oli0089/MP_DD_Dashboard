@@ -1,10 +1,8 @@
 # app/routes.py
 from datetime import datetime
-
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, current_user
-
 from app import db
 from app.models import User, Role, UserRole, Ticket
 
@@ -21,6 +19,7 @@ def index():
     return render_template("index.html")
 
 
+# list and create tickets
 @bp.route("/tickets", methods=["GET", "POST"])
 @login_required
 def tickets():
@@ -31,7 +30,7 @@ def tickets():
         # jira reference must match MOTOR-12345 (1 to 5 digits)
         pattern = r"^MOTOR-\d{1,5}$"
 
-        # guest users are read-only: they can see tickets but not add them
+        # guest users are read-only, they can still see tickets
         if current_user.is_guest:
             flash("Guest users cannot create tickets.", "warning")
             return redirect(url_for("routes.tickets"))
@@ -77,7 +76,6 @@ def tickets():
             external_ref=external_ref,
             title=title,
             created_by_id=current_user.id,
-            ready_at=datetime.utcnow(),
         )
         db.session.add(ticket)
         db.session.commit()
@@ -105,6 +103,31 @@ def tickets():
         "tickets.html",
         tickets_by_status=tickets_by_status,
     )
+
+
+# move a ticket from ready_for_buddy to buddied.
+@bp.route("/tickets/<int:ticket_id>/buddied", methods=["POST"])
+@login_required
+def mark_ticket_buddied(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+
+    # only tickets actually waiting for buddy can be moved
+    if ticket.status != "ready_for_buddy":
+        flash("Only tickets that are ready for buddy can be marked as buddied.", "warning")
+        return redirect(url_for("routes.tickets"))
+
+    # guest users stay read-only
+    if current_user.is_guest:
+        flash("Guest users cannot update tickets.", "warning")
+        return redirect(url_for("routes.tickets"))
+
+    ticket.status = "buddied"
+    ticket.buddy_id = current_user.id
+    ticket.ready_at = datetime.utcnow()
+
+    db.session.commit()
+    flash("Ticket marked as buddied.", "success")
+    return redirect(url_for("routes.tickets"))
 
 
 # admins only

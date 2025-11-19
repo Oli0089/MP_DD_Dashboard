@@ -68,7 +68,7 @@
 
             {% if ticket.ready_at %}
               <p class="text-muted small mb-1">
-                Ready since {{ ticket.ready_at.strftime("%d/%m/%Y %H:%M") }}
+                Created {{ ticket.created_at.strftime("%d/%m/%Y %H:%M") }}
               </p>
             {% endif %}
 
@@ -76,10 +76,14 @@
               Added by {{ ticket.creator.username }}
             </p>
 
-            {# Button will later mark this as buddied #}
-            <button class="btn btn-sm btn-outline-primary" disabled>
-              Mark as buddied - need to add
-            </button>
+            {# Mark the ticket as buddied #}
+            <form method="post"
+                  action="{{ url_for('routes.mark_ticket_buddied', ticket_id=ticket.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-primary">
+                Mark as buddied
+              </button>
+            </form>
           </div>
         </div>
       {% endfor %}
