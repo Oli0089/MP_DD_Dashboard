@@ -113,7 +113,7 @@ def mark_ticket_buddied(ticket_id):
 
     # only tickets actually waiting for buddy can be moved
     if ticket.status != "ready_for_buddy":
-        flash("Only tickets that are ready for buddy can be marked as buddied.", "warning")
+        flash("This ticket is not ready to be buddied.", "warning")
         return redirect(url_for("routes.tickets"))
 
     # guest users stay read-only
