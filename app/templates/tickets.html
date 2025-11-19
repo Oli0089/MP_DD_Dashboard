@@ -97,9 +97,43 @@
     <h2 class="h5">Buddied</h2>
     {% if tickets_by_status.buddied %}
       <p class="text-muted small">
-        {{ tickets_by_status.buddied|length }} ticket(s) have been buddied.
+         Showing up to 5 of {{ tickets_by_status.buddied|length }} ticket(s) buddied.
       </p>
-      <!-- Cards to be added for tickets -->
+      {% for ticket in tickets_by_status.buddied[:5] %}
+        <div class="card mb-3 shadow-sm">
+          <div class="card-body">
+            <h3 class="h6 mb-1">{{ ticket.title }}</h3>
+            <p class="text-muted small mb-1">
+              Jira: {{ ticket.external_ref }}
+            </p>
+
+            <!-- Who added it -->
+            {% if ticket.creator %}
+              <p class="text-muted small mb-1">
+                Added by {{ ticket.creator.username }}
+              </p>
+            {% endif %}
+
+            <!-- Who buddied it and when -->
+            {% if ticket.buddy and ticket.ready_at %}
+              <p class="text-muted small mb-2">
+                Buddied by {{ ticket.buddy.username }}
+                on {{ ticket.ready_at.strftime("%d/%m/%Y %H:%M") }}
+              </p>
+            {% elif ticket.ready_at %}
+              <p class="text-muted small mb-2">
+                Buddied on {{ ticket.ready_at.strftime("%d/%m/%Y %H:%M") }}
+              </p>
+            {% endif %}
+
+            <!-- Delete to add later -->
+            <button class="btn btn-sm btn-outline-danger" disabled>
+              Delete (coming soon)
+            </button>
+
+          </div>
+        </div>
+      {% endfor %}
     {% else %}
       <p class="text-muted small">No tickets have been marked as buddied yet.</p>
     {% endif %}

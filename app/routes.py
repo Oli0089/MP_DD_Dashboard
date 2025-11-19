@@ -121,6 +121,11 @@ def mark_ticket_buddied(ticket_id):
         flash("Guest users cannot update tickets.", "warning")
         return redirect(url_for("routes.tickets"))
 
+    # prevent users from buddying their own tickets
+    if ticket.created_by_id == current_user.id:
+        flash("You cannot buddy a ticket that you created.", "warning")
+        return redirect(url_for("routes.tickets"))
+
     ticket.status = "buddied"
     ticket.buddy_id = current_user.id
     ticket.ready_at = datetime.utcnow()
