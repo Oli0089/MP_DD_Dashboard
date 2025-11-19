@@ -1,10 +1,8 @@
 # app/routes.py
 from datetime import datetime
-
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, current_user
-
 from app import db
 from app.models import User, Role, UserRole, Ticket
 
@@ -21,12 +19,18 @@ def index():
     return render_template("index.html")
 
 
-@bp.route("/tickets")
+# list and create tickets
+@bp.route("/tickets", methods=["GET", "POST"])
 @login_required
 def tickets():
 
     if request.method == "POST":
-        # guest users are read-only: they can see tickets but not add them
+        import re
+
+        # jira reference must match MOTOR-12345 (1 to 5 digits)
+        pattern = r"^MOTOR-\d{1,5}$"
+
+        # guest users are read-only, they can still see tickets
         if current_user.is_guest:
             flash("Guest users cannot create tickets.", "warning")
             return redirect(url_for("routes.tickets"))
@@ -41,6 +45,30 @@ def tickets():
                 "description."
             )
             flash(msg, "danger")
+
+        # Short description must be under 20 characters
+        if len(title) > 20:
+            flash("Short description must be under 20 characters", "danger")
+            return redirect(url_for("routes.tickets"))
+
+        if not re.match(pattern, external_ref.upper()):
+            flash("Jira format must follow MOTOR-.", "danger")
+            return redirect(url_for("routes.tickets"))
+
+        # Prevent duplicate Jira references
+        existing = Ticket.query.filter(
+            Ticket.external_ref == external_ref.upper(),
+            Ticket.status != "deleted",
+        ).first()
+
+        if existing:
+            flash(
+                "This Jira reference is already in the buddy workflow.",
+                "danger",
+            )
+            return redirect(url_for("routes.tickets"))
+
+        external_ref = external_ref.upper()
 
         # create a new ticket to the board
         # status defaults to "ready_for_buddy" in the model
@@ -57,7 +85,7 @@ def tickets():
 
     # show tickets in three groups for the buddy board.
     # newest tickets first so the queue makes sense to testers
-    all_tickets = Ticket.query.order_by(Ticket.created_at.desc()).all()
+    all_tickets = Ticket.query.order_by(Ticket.created_at.asc()).all()
 
     tickets_by_status = {
         "ready_for_buddy": [
@@ -75,6 +103,36 @@ def tickets():
         "tickets.html",
         tickets_by_status=tickets_by_status,
     )
+
+
+# move a ticket from ready_for_buddy to buddied.
+@bp.route("/tickets/<int:ticket_id>/buddied", methods=["POST"])
+@login_required
+def mark_ticket_buddied(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+
+    # only tickets actually waiting for buddy can be moved
+    if ticket.status != "ready_for_buddy":
+        flash("This ticket is not ready to be buddied.", "warning")
+        return redirect(url_for("routes.tickets"))
+
+    # guest users stay read-only
+    if current_user.is_guest:
+        flash("Guest users cannot update tickets.", "warning")
+        return redirect(url_for("routes.tickets"))
+
+    # prevent users from buddying their own tickets
+    if ticket.created_by_id == current_user.id:
+        flash("You cannot buddy a ticket that you created.", "warning")
+        return redirect(url_for("routes.tickets"))
+
+    ticket.status = "buddied"
+    ticket.buddy_id = current_user.id
+    ticket.ready_at = datetime.utcnow()
+
+    db.session.commit()
+    flash("Ticket marked as buddied.", "success")
+    return redirect(url_for("routes.tickets"))
 
 
 # admins only

@@ -123,7 +123,11 @@ class Ticket(db.Model):
         db.DateTime,
         default=datetime.utcnow
     )
-    ready_at = db.Column(db.DateTime, nullable=True)
+
+    ready_at = db.Column(
+        db.DateTime,
+        nullable=True
+    )
 
     # who raised the ticket
     created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
