@@ -59,18 +59,16 @@
       Showing up to 5 of {{ tickets_by_status.ready_for_buddy|length }} ticket(s) waiting.
     </p>
       {% for ticket in tickets_by_status.ready_for_buddy[:5] %}
-        <div class="card mb-3 shadow-sm">
+        <div class="card mb-3 shadow-sm border-start border-4 border-{{ ticket.age_colour }}">
           <div class="card-body">
             <h3 class="h6 mb-1">{{ ticket.title }}</h3>
             <p class="text-muted small mb-1">
               Jira: {{ ticket.external_ref }}
             </p>
 
-            {% if ticket.ready_at %}
               <p class="text-muted small mb-1">
                 Created {{ ticket.created_at.strftime("%d/%m/%Y %H:%M") }}
               </p>
-            {% endif %}
 
             <p class="text-muted small mb-1">
               Added by {{ ticket.creator.username }}
