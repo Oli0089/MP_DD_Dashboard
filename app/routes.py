@@ -134,6 +134,29 @@ def mark_ticket_buddied(ticket_id):
     flash("Ticket marked as buddied.", "success")
     return redirect(url_for("routes.tickets"))
 
+# delete a ticket
+@bp.route("/tickets/<int:ticket_id>/delete", methods=["POST"])
+@login_required
+def delete_ticket(ticket_id):
+
+    ticket = Ticket.query.get_or_404(ticket_id)
+
+    # only allow admins to delete
+    if not current_user.is_admin:
+        flash("Only admins can delete tickets.", "danger")
+        return redirect(url_for("routes.tickets"))
+
+    # only allow deletion for buddied tickets
+    if ticket.status != "buddied":
+        flash("Only buddied tickets can be deleted.", "warning")
+        return redirect(url_for("routes.tickets"))
+
+    db.session.delete(ticket)
+    db.session.commit()
+
+    flash("Ticket deleted.", "success")
+    return redirect(url_for("routes.tickets"))
+
 
 # admins only
 @bp.route("/admin")
