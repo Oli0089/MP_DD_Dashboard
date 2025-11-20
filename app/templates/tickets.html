@@ -50,7 +50,7 @@
 </div>
 {% endif %}
 
-<div class="row">
+<div class="d-flex justify-content-center gap-4">
   <!-- Column 1: Ready to buddy -->
   <div class="col-lg-4 mb-4">
     <h2 class="h5">Ready to buddy</h2>
@@ -76,7 +76,7 @@
               Added by {{ ticket.creator.username }}
             </p>
 
-            {# Mark the ticket as buddied #}
+          {% if not current_user.is_guest %}
             <form method="post"
                   action="{{ url_for('routes.mark_ticket_buddied', ticket_id=ticket.id) }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -84,6 +84,7 @@
                 Mark as buddied
               </button>
             </form>
+          {% endif %}
           </div>
         </div>
       {% endfor %}
@@ -126,29 +127,23 @@
               </p>
             {% endif %}
 
-            <!-- Delete to add later -->
-            <button class="btn btn-sm btn-outline-danger" disabled>
-              Delete (coming soon)
-            </button>
+            {% if current_user.is_admin %}
+              <form method="post"
+                    action="{{ url_for('routes.delete_ticket', ticket_id=ticket.id) }}"
+                    class="mt-2"
+                    onsubmit="return confirm('Are you sure you want to delete this ticket?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                  Delete ticket
+                </button>
+              </form>
+            {% endif %}
 
           </div>
         </div>
       {% endfor %}
     {% else %}
       <p class="text-muted small">No tickets have been marked as buddied yet.</p>
-    {% endif %}
-  </div>
-
-  <!-- Column 3: Deleted -->
-  <div class="col-lg-4 mb-4">
-    <h2 class="h5">Deleted</h2>
-    {% if tickets_by_status.deleted %}
-      <p class="text-muted small">
-        {{ tickets_by_status.deleted|length }} ticket(s) have been deleted.
-      </p>
-      <!-- Cards to be added for tickets -->
-    {% else %}
-      <p class="text-muted small">No tickets have been deleted.</p>
     {% endif %}
   </div>
 </div>
