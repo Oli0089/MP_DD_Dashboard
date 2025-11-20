@@ -134,6 +134,7 @@ def mark_ticket_buddied(ticket_id):
     flash("Ticket marked as buddied.", "success")
     return redirect(url_for("routes.tickets"))
 
+
 # delete a ticket
 @bp.route("/tickets/<int:ticket_id>/delete", methods=["POST"])
 @login_required

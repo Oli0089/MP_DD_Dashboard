@@ -149,7 +149,6 @@ class Ticket(db.Model):
         back_populates="tickets_buddy",
     )
 
-
     # used in the UI to colour code tickets
     @property
     def age_colour(self):
