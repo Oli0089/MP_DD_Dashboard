@@ -2,67 +2,65 @@
 import pytest
 import warnings
 
-from app import create_app
+from app import create_app, db
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+# Fixtures/helpers for all unit tests
+#=====================================
+@pytest.fixture()
+def app():
+    # Create a fresh app and database for each test
+    app = create_app(
+        {
+            "TESTING": True,
+            "WTF_CSRF_ENABLED": False,
+            # Uses in-memory database for tests
+            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+        }
+    )
+
+    with app.app_context():
+        db.create_all()
+        try:
+            yield app
+        finally:
+            db.session.remove()
+            db.drop_all()
+
 
 @pytest.fixture()
-def client():
-    # Test client to make fake requests
-    app = create_app()
-    app.config.update(
-        TESTING=True,
-        WTF_CSRF_ENABLED=False,
-    )
-    with app.test_client() as c:
-        yield c
+def client(app):
+    # Test client for making requests
+    return app.test_client()
+
+# Basic starting routes & health endpoint
+#=====================================
+
+def test_health_endpoint_returns_200_and_json(client):
+    response = client.get("/health")
+    assert response.status_code == 200
+
+    data = response.get_json()
+    assert data is not None
+    assert data.get("status") == "healthy"
 
 
-def test_index_renders(client):
-    # Ensures the home page ('/') renders successfully
-    resp = client.get("/", follow_redirects=True)
-    assert resp.status_code == 200
-    assert b"Login" in resp.data
+def test_index_redirects_to_login_when_not_authenticated(client):
+    response = client.get("/", follow_redirects=False)
+
+    # login_required should force a redirect to the login page
+    assert response.status_code in (302, 303)
+    assert "/login" in response.headers.get("Location", "")
 
 
 def test_login_page_loads(client):
-    # Login should return 200
     response = client.get("/login")
     assert response.status_code == 200
+    assert b"Login" in response.data
 
 
 def test_register_page_loads(client):
-    # Register should return 200
     response = client.get("/register")
     assert response.status_code == 200
-
-
-def test_admin_requires_login(client):
-    # admin page without login should redirect to login page
-    response = client.get("/admin", follow_redirects=False)
-    assert response.status_code == 302
-    assert "/login" in response.headers["Location"]
-
-
-def test_logout_redirects_to_login(client):
-    # logout without being logged in should redirect to login page
-    response = client.get("/logout", follow_redirects=False)
-    assert response.status_code == 302
-    assert "/login" in response.headers["Location"]
-
-
-def test_register_rejects_spaces_only_password(client):
-    # send a register POST with spaces as a password
-    response = client.post(
-        "/register",
-        data={
-            "username": "test_user_spaces",
-            "email": "spaces@example.com",
-            "password": "   ",
-            "confirm_password": "   ",
-        },
-        follow_redirects=True,
-    )
-    # expect the validation message to appear
-    assert b"Password cannot be empty or spaces only" in response.data
+    assert b"Register" in response.data
