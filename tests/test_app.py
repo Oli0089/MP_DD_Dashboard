@@ -1,10 +1,10 @@
 # tests/test_app.py
 import pytest
-import warnings
 from app import create_app, db
 
+
 # Fixtures
-#=====================================
+# =====================================
 @pytest.fixture()
 def app():
     # Create a fresh app and database for each test
@@ -33,8 +33,13 @@ def client(app):
 
 
 # Helpers to create a user for tests
-#=====================================
-def register_user(client, username="testuser", email="test@example.com", password="Password1"):
+# =====================================
+def register_user(
+        client,
+        username="testuser",
+        email="test@example.com",
+        password="Password1"
+):
     return client.post(
         "/register",
         data={
@@ -47,7 +52,12 @@ def register_user(client, username="testuser", email="test@example.com", passwor
     )
 
 
-def register_and_login(client, username="ticketuser", email="ticket@example.com", password="Password1"):
+def register_and_login(
+        client,
+        username="ticketuser",
+        email="ticket@example.com",
+        password="Password1"
+):
     register_user(client, username=username, email=email, password=password)
     return client.post(
         "/login",
@@ -70,8 +80,9 @@ def make_admin(app, username):
         user.roles.append(UserRole(user_id=user.id, role_id=admin_role.id))
         db.session.commit()
 
+
 # Basic starting routes & health endpoint
-#=====================================
+# =====================================
 def test_health_endpoint_returns_200_and_json(client):
     response = client.get("/health")
     assert response.status_code == 200
@@ -102,7 +113,7 @@ def test_register_page_loads(client):
 
 
 # Registration/validation rules
-#=====================================
+# =====================================
 def test_register_rejects_spaces_only_password(client):
     # send a register POST with spaces as a password
     response = client.post(
@@ -147,7 +158,10 @@ def test_register_rejects_password_without_letter(client):
         },
         follow_redirects=True,
     )
-    assert b"Password must contain at least one letter and one number." in response.data
+    assert (
+        b"Password must contain at least one letter and one number."
+        in response.data
+    )
 
 
 def test_register_rejects_duplicate_username(client):
@@ -178,7 +192,7 @@ def test_register_rejects_duplicate_username(client):
 
 
 # Login/logout rules
-#=====================================
+# =====================================
 def test_login_invalid(client):
     resp = client.post(
         "/login",
@@ -238,7 +252,7 @@ def test_logout(client):
 
 
 # Roles/permissions
-#=====================================
+# =====================================
 def test_admin_page_requires_login(client):
     resp = client.get("/admin", follow_redirects=False)
     assert resp.status_code in (302, 303)
@@ -273,6 +287,6 @@ def test_admin_can_access_admin_page(app, client):
     assert b"Admin Panel" in resp.data
 
 # Still to add tests to cover -
-#Ticket creation/validation
-#Ticket lifecycle
-#=====================================
+# Ticket creation/validation
+# Ticket lifecycle
+# =====================================
