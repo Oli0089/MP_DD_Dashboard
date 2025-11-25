@@ -121,6 +121,7 @@ class Ticket(db.Model):
 
     created_at = db.Column(
         db.DateTime,
+        nullable=False,
         default=datetime.utcnow
     )
 
@@ -147,3 +148,22 @@ class Ticket(db.Model):
         foreign_keys=[buddy_id],
         back_populates="tickets_buddy",
     )
+
+    # used in the UI to colour code tickets
+    @property
+    def age_colour(self):
+        if not self.created_at:
+            return "success"
+
+        now = datetime.utcnow()
+        delta = now - self.created_at
+        days = delta.total_seconds() / 86400
+
+        # green if less than 1 day
+        # amber if 1–3 days
+        if days < 1:
+            return "success"
+        if days < 3:
+            return "warning"
+        # red if more than 3 days
+        return "danger"

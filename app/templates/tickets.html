@@ -50,7 +50,7 @@
 </div>
 {% endif %}
 
-<div class="row">
+<div class="d-flex justify-content-center gap-4">
   <!-- Column 1: Ready to buddy -->
   <div class="col-lg-4 mb-4">
     <h2 class="h5">Ready to buddy</h2>
@@ -59,24 +59,22 @@
       Showing up to 5 of {{ tickets_by_status.ready_for_buddy|length }} ticket(s) waiting.
     </p>
       {% for ticket in tickets_by_status.ready_for_buddy[:5] %}
-        <div class="card mb-3 shadow-sm">
+        <div class="card mb-3 shadow-sm border-start border-4 border-{{ ticket.age_colour }}">
           <div class="card-body">
             <h3 class="h6 mb-1">{{ ticket.title }}</h3>
             <p class="text-muted small mb-1">
               Jira: {{ ticket.external_ref }}
             </p>
 
-            {% if ticket.ready_at %}
               <p class="text-muted small mb-1">
                 Created {{ ticket.created_at.strftime("%d/%m/%Y %H:%M") }}
               </p>
-            {% endif %}
 
             <p class="text-muted small mb-1">
               Added by {{ ticket.creator.username }}
             </p>
 
-            {# Mark the ticket as buddied #}
+          {% if not current_user.is_guest %}
             <form method="post"
                   action="{{ url_for('routes.mark_ticket_buddied', ticket_id=ticket.id) }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -84,6 +82,7 @@
                 Mark as buddied
               </button>
             </form>
+          {% endif %}
           </div>
         </div>
       {% endfor %}
@@ -126,29 +125,23 @@
               </p>
             {% endif %}
 
-            <!-- Delete to add later -->
-            <button class="btn btn-sm btn-outline-danger" disabled>
-              Delete (coming soon)
-            </button>
+            {% if current_user.is_admin %}
+              <form method="post"
+                    action="{{ url_for('routes.delete_ticket', ticket_id=ticket.id) }}"
+                    class="mt-2"
+                    onsubmit="return confirm('Are you sure you want to delete this ticket?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                  Delete ticket
+                </button>
+              </form>
+            {% endif %}
 
           </div>
         </div>
       {% endfor %}
     {% else %}
       <p class="text-muted small">No tickets have been marked as buddied yet.</p>
-    {% endif %}
-  </div>
-
-  <!-- Column 3: Deleted -->
-  <div class="col-lg-4 mb-4">
-    <h2 class="h5">Deleted</h2>
-    {% if tickets_by_status.deleted %}
-      <p class="text-muted small">
-        {{ tickets_by_status.deleted|length }} ticket(s) have been deleted.
-      </p>
-      <!-- Cards to be added for tickets -->
-    {% else %}
-      <p class="text-muted small">No tickets have been deleted.</p>
     {% endif %}
   </div>
 </div>
