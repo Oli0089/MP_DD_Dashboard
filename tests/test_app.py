@@ -110,6 +110,33 @@ def make_guest(app, username):
         user.roles.append(UserRole(user_id=user.id, role_id=tester_role.id))
         db.session.commit()
 
+#Register a tester user, log them in, and create a single ticket
+def create_ticket_as_tester(app, client, username, email, external_ref, title):
+    from app.models import Ticket
+
+    register_user(client, username=username, email=email, password="Password1")
+
+    make_tester(app, username)
+
+    client.post(
+        "/login",
+        data={"username": username, "password": "Password1"},
+        follow_redirects=True,
+    )
+
+    client.post(
+        "/tickets",
+        data={
+            "external_ref": external_ref,
+            "title": title,
+        },
+        follow_redirects=True,
+    )
+
+    # Return the created ticket from the DB
+    with app.app_context():
+        ticket = Ticket.query.filter_by(external_ref=external_ref.upper()).first()
+        return ticket
 
 # Basic starting routes & health endpoint
 # =====================================
@@ -316,6 +343,7 @@ def test_admin_can_access_admin_page(app, client):
     assert resp.status_code == 200
     assert b"Admin Panel" in resp.data
 
+
 # Ticket creation/ validation
 # =====================================
 def test_ticket_create_requires_login(client):
@@ -467,6 +495,186 @@ def test_guest_cannot_create_ticket(app, client):
         assert Ticket.query.count() == 0
 
 
-# Still to add tests to cover -
 # Ticket lifecycle
 # =====================================
+def test_user_cannot_buddy_own_ticket(app, client):
+    # Create a tester and ticket
+    ticket = create_ticket_as_tester(
+        app,
+        client,
+        username="owner",
+        email="owner@example.com",
+        external_ref="MOTOR-200",
+        title="Owner ticket",
+    )
+
+    # try to buddy own ticket
+    resp = client.post(
+        f"/tickets/{ticket.id}/buddied",
+        follow_redirects=True,
+    )
+
+    assert resp.status_code == 200
+
+    # Ticket should not be buddied
+    from app.models import Ticket
+    with app.app_context():
+        updated = Ticket.query.get(ticket.id)
+        assert updated.status == "ready_for_buddy"
+        assert updated.buddy_id is None
+
+
+def test_other_user_can_buddy_ticket(app, client):
+    ticket = create_ticket_as_tester(
+        app,
+        client,
+        username="owner2",
+        email="owner2@example.com",
+        external_ref="MOTOR-201",
+        title="Ticket to be buddied",
+    )
+
+    # Log out the owner
+    client.get("/logout", follow_redirects=True)
+
+    # Register and log in as a different tester who will buddy the ticket
+    register_user(
+        client,
+        username="buddyuser",
+        email="buddy@example.com",
+        password="Password1",
+    )
+
+    make_tester(app, "buddyuser")
+
+    client.post(
+        "/login",
+        data={"username": "buddyuser", "password": "Password1"},
+        follow_redirects=True,
+    )
+
+    # Buddy the ticket as the second user
+    resp = client.post(
+        f"/tickets/{ticket.id}/buddied",
+        follow_redirects=True,
+    )
+    assert resp.status_code == 200
+
+    # Ticket should now be marked as buddied by buddyuser
+    from app.models import Ticket, User
+    with app.app_context():
+        updated = Ticket.query.get(ticket.id)
+        buddy = User.query.filter_by(username="buddyuser").first()
+
+        assert updated.status == "buddied"
+        assert updated.buddy_id == buddy.id
+
+
+def test_admin_can_delete_buddied_ticket(app, client):
+    ticket = create_ticket_as_tester(
+        app,
+        client,
+        username="owner3",
+        email="owner3@example.com",
+        external_ref="MOTOR-300",
+        title="Ticket to delete",
+    )
+
+    # Log out owner
+    client.get("/logout", follow_redirects=True)
+
+    # Second tester buddies the ticket
+    register_user(
+        client,
+        username="buddy_for_delete",
+        email="buddy_for_delete@example.com",
+        password="Password1",
+    )
+
+    make_tester(app, "buddy_for_delete")
+
+    client.post(
+        "/login",
+        data={"username": "buddy_for_delete", "password": "Password1"},
+        follow_redirects=True,
+    )
+    client.post(
+        f"/tickets/{ticket.id}/buddied",
+        follow_redirects=True,
+    )
+
+    # Log out of buddy user
+    client.get("/logout", follow_redirects=True)
+
+    # Admin log in
+    register_user(
+        client,
+        username="admin_delete",
+        email="admin_delete@example.com",
+        password="Password1",
+    )
+
+    make_admin(app, "admin_delete")
+
+    client.post(
+        "/login",
+        data={"username": "admin_delete", "password": "Password1"},
+        follow_redirects=True,
+    )
+
+    # Admin deletes the buddied ticket
+    resp = client.post(
+        f"/tickets/{ticket.id}/delete",
+        follow_redirects=True,
+    )
+    assert resp.status_code == 200
+
+    # Check the ticket has been deleted
+    from app.models import Ticket
+    with app.app_context():
+        assert Ticket.query.get(ticket.id) is None
+
+
+def test_cannot_delete_ticket_if_not_buddied(app, client):
+    ticket = create_ticket_as_tester(
+        app,
+        client,
+        username="owner4",
+        email="owner4@example.com",
+        external_ref="MOTOR-301",
+        title="Not buddied yet",
+    )
+
+    # Log out owner
+    client.get("/logout", follow_redirects=True)
+
+    # Skip the buddy step
+    # Admin logs in
+    register_user(
+        client,
+        username="admin_cannot_delete",
+        email="admin_cannot_delete@example.com",
+        password="Password1",
+    )
+
+    make_admin(app, "admin_cannot_delete")
+
+    client.post(
+        "/login",
+        data={"username": "admin_cannot_delete", "password": "Password1"},
+        follow_redirects=True,
+    )
+
+    # Try to delete a ticket that is not buddied
+    resp = client.post(
+        f"/tickets/{ticket.id}/delete",
+        follow_redirects=True,
+    )
+    assert resp.status_code == 200
+
+    # The ticket should still exist
+    from app.models import Ticket
+    with app.app_context():
+        updated = Ticket.query.get(ticket.id)
+        assert updated is not None
+        assert updated.status == "ready_for_buddy"
