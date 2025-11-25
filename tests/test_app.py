@@ -110,7 +110,8 @@ def make_guest(app, username):
         user.roles.append(UserRole(user_id=user.id, role_id=tester_role.id))
         db.session.commit()
 
-#Register a tester user, log them in, and create a single ticket
+
+# Register a tester user, log them in, and create a single ticket
 def create_ticket_as_tester(app, client, username, email, external_ref, title):
     from app.models import Ticket
 
@@ -135,8 +136,11 @@ def create_ticket_as_tester(app, client, username, email, external_ref, title):
 
     # Return the created ticket from the DB
     with app.app_context():
-        ticket = Ticket.query.filter_by(external_ref=external_ref.upper()).first()
+        ticket = Ticket.query.filter_by(
+            external_ref=external_ref.upper()
+        ).first()
         return ticket
+
 
 # Basic starting routes & health endpoint
 # =====================================
