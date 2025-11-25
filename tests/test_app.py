@@ -81,6 +81,36 @@ def make_admin(app, username):
         db.session.commit()
 
 
+def make_tester(app, username):
+    from app.models import User, Role, UserRole
+    with app.app_context():
+        user = User.query.filter_by(username=username).first()
+        tester_role = Role.query.filter_by(name="Tester").first()
+        if tester_role is None:
+            tester_role = Role(name="Tester")
+            db.session.add(tester_role)
+            db.session.commit()
+
+        # assign tester role
+        user.roles.append(UserRole(user_id=user.id, role_id=tester_role.id))
+        db.session.commit()
+
+
+def make_guest(app, username):
+    from app.models import User, Role, UserRole
+    with app.app_context():
+        user = User.query.filter_by(username=username).first()
+        tester_role = Role.query.filter_by(name="Guest").first()
+        if tester_role is None:
+            tester_role = Role(name="Guest")
+            db.session.add(tester_role)
+            db.session.commit()
+
+        # assign guest role
+        user.roles.append(UserRole(user_id=user.id, role_id=tester_role.id))
+        db.session.commit()
+
+
 # Basic starting routes & health endpoint
 # =====================================
 def test_health_endpoint_returns_200_and_json(client):
@@ -286,7 +316,157 @@ def test_admin_can_access_admin_page(app, client):
     assert resp.status_code == 200
     assert b"Admin Panel" in resp.data
 
+# Ticket creation/ validation
+# =====================================
+def test_ticket_create_requires_login(client):
+    # Attempt to create a ticket without logging in
+    resp = client.post(
+        "/tickets",
+        data={
+            "external_ref": "MOTOR-9999",
+            "title": "Should not work",
+        },
+        follow_redirects=False,
+    )
+
+    # Should be redirected to login
+    assert resp.status_code in (302, 303)
+    assert "/login" in resp.headers.get("Location", "")
+
+
+def test_ticket_create_valid_data_succeeds(app, client):
+    # register/login helper
+    register_and_login(
+        client,
+        username="creator",
+        email="creator@example.com",
+        password="Password1"
+    )
+
+    # Make guest a tester to create a ticketr
+    make_tester(app, "creator")
+
+    # Create a valid ticket
+    resp = client.post(
+        "/tickets",
+        data={
+            "external_ref": "MOTOR-12345",
+            "title": "Unit test ticket"
+        },
+        follow_redirects=True,
+    )
+
+    # Check the request
+    assert resp.status_code == 200
+
+    # Check that a ticket exists
+    from app.models import Ticket
+    with app.app_context():
+        count = Ticket.query.count()
+        assert count == 1
+
+
+def test_ticket_create_rejects_invalid_external_ref(app, client):
+    register_and_login(
+        client,
+        username="creator_invalid",
+        email="creator_invalid@example.com",
+        password="Password1",
+    )
+    make_tester(app, "creator_invalid")
+
+    # create a ticket with an invalid external ref
+    resp = client.post(
+        "/tickets",
+        data={
+            "external_ref": "MTR-123",  # invalid pattern
+            "title": "Invalid ref test",
+        },
+        follow_redirects=True,
+    )
+
+    # Form should re-render
+    assert resp.status_code == 200
+
+    # Also should not create any tickets
+    from app.models import Ticket
+    with app.app_context():
+        assert Ticket.query.count() == 0
+
+
+def test_ticket_create_rejects_duplicate_external_ref(app, client):
+    register_and_login(
+        client,
+        username="creator_dup",
+        email="creator_dup@example.com",
+        password="Password1",
+    )
+    make_tester(app, "creator_dup")
+
+    # First ticket created
+    client.post(
+        "/tickets",
+        data={
+            "external_ref": "MOTOR-777",
+            "title": "First ticket",
+        },
+        follow_redirects=True,
+    )
+
+    # Try to create another ticket with the same external_ref
+    resp = client.post(
+        "/tickets",
+        data={
+            "external_ref": "MOTOR-777",
+            "title": "Duplicate ticket",
+        },
+        follow_redirects=True,
+    )
+
+    assert resp.status_code == 200
+
+    # DB should only have **one** ticket
+    from app.models import Ticket
+    with app.app_context():
+        assert Ticket.query.count() == 1
+
+
+def test_guest_cannot_create_ticket(app, client):
+    register_and_login(
+        client,
+        username="guestuser",
+        email="guest@example.com",
+        password="Password1",
+    )
+
+    # make user a Guest
+    make_guest(app, "guestuser")
+
+    # need to login again to make sure guest is active
+    client.post(
+        "/login",
+        data={"username": "guestuser", "password": "Password1"},
+        follow_redirects=True,
+    )
+
+    # Attempt to create a ticket as a guest
+    resp = client.post(
+        "/tickets",
+        data={
+            "external_ref": "MOTOR-999",
+            "title": "Guest ticket",
+        },
+        follow_redirects=True,
+    )
+
+    assert resp.status_code == 200
+
+    # Guest should not have been able to create a ticket
+    from app.models import Ticket
+    with app.app_context():
+        assert Ticket.query.count() == 0
+
+
 # Still to add tests to cover -
-# Ticket creation/validation
 # Ticket lifecycle
 # =====================================
