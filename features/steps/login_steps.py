@@ -40,6 +40,7 @@ def step_create_user(context, username, password):
         follow_redirects=True,
     )
 
+
 # Added given to allow this to be used in other feature files
 @given('I log in with username "{username}" and password "{password}"')
 @when('I log in with username "{username}" and password "{password}"')

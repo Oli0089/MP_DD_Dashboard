@@ -1,8 +1,7 @@
-from behave import given, when, then
+from behave import given, when
 
 # Helper functions
 # =====================================
-
 # Registering and assign role tester
 def ensure_tester_user(context, username, password="Password1"):
     # Same as the pytest helper logic
@@ -58,10 +57,12 @@ def login_user(context, username, password="Password1"):
 # Test 1, Cannot buddy own ticket
 # =====================================
 
+
 @given('I am logged in as tester "{username}"')
 def step_logged_in_as_tester(context, username):
     ensure_tester_user(context, username)
     login_user(context, username)
+
 
 @given("I have created a ticket ready for buddy")
 def step_create_ticket_ready_for_buddy(context):
@@ -85,6 +86,7 @@ def step_create_ticket_ready_for_buddy(context):
         # Store the id so the buddy step can use it
         context.ticket_id = ticket.id
 
+
 @when("I try to buddy that ticket")
 def step_try_to_buddy_that_ticket(context):
     # Attempt to buddy the ticket
@@ -102,6 +104,7 @@ def step_try_to_buddy_that_ticket(context):
 # =====================================
 
 # given is already set above along with the two ands
+
 
 @when("I buddy that ticket")
 def step_buddy_that_ticket(context):

@@ -37,7 +37,9 @@ def step_redirect_to_home(context):
 # Reuses logic from py test to make_admin
 
 
-@given('an admin user exists with username "{username}" and password "{password}"')
+@given(
+        'an admin user exists with username "{username}" and password "{password}"'
+)
 def step_admin_user_exists(context, username, password):
     from app import db
     from app.models import User, Role, UserRole

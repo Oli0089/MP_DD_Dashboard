@@ -1,9 +1,10 @@
 from behave import given, when, then
 from datetime import datetime, timedelta
 
+
 @given("a ticket exists that was created 5 days ago")
 def step_ticket_old(context):
-     # Insert a ticket into the DB thats 5 days old
+    # Insert a ticket into the DB thats 5 days old
     from app import db
     from app.models import Ticket, User
 
@@ -38,9 +39,11 @@ def step_ticket_old(context):
 
         context.ticket_id = ticket.id
 
+
 @when("I view the ticket board")
 def step_view_ticket_board(context):
     context.response = context.client.get("/", follow_redirects=True)
+
 
 @then('I should see the "danger" indicator')
 def step_see_danger_indicator(context):
