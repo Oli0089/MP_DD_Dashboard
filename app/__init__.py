@@ -16,7 +16,7 @@ csrf = CSRFProtect()  # CSRF protection for forms
 def create_app(test_config=None):
     app = Flask(__name__)
 
-    # to be updated
+    # sent on render, dev-secert to fall back on for testing
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
 
     # protection on post forms
@@ -26,7 +26,7 @@ def create_app(test_config=None):
     # set on Render for Postgres
     database_url = os.environ.get("DATABASE_URL")
 
-    # Render reported to sometimes give unexpected URLs
+    # No longer using postgres but keeping incase used in the future
     if database_url and database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
 
