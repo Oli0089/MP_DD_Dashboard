@@ -1,5 +1,6 @@
 from behave import given, when
 
+
 # Helper functions
 # =====================================
 # Registering and assign role tester
@@ -45,6 +46,7 @@ def ensure_tester_user(context, username, password="Password1"):
         data={"username": username, "password": password},
         follow_redirects=True,
     )
+
 
 def login_user(context, username, password="Password1"):
     # Log in as the user

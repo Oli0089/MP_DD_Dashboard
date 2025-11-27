@@ -38,7 +38,8 @@ def step_redirect_to_home(context):
 
 
 @given(
-        'an admin user exists with username "{username}" and password "{password}"'
+    'an admin user exists with username "{username}" '
+    'and password "{password}"'
 )
 def step_admin_user_exists(context, username, password):
     from app import db
