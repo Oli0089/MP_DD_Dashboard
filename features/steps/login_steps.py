@@ -24,6 +24,7 @@ def step_should_see_text(context, text):
 
 
 # Test 2, happy path
+# =====================================
 @given('a user exists with username "{username}" and password "{password}"')
 def step_create_user(context, username, password):
     # Create a user through registration route
@@ -39,7 +40,8 @@ def step_create_user(context, username, password):
         follow_redirects=True,
     )
 
-
+# Added given to allow this to be used in other feature files
+@given('I log in with username "{username}" and password "{password}"')
 @when('I log in with username "{username}" and password "{password}"')
 def step_login_with_credentials(context, username, password):
     context.response = context.client.post(

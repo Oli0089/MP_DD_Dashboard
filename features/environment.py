@@ -14,4 +14,5 @@ def before_scenario(context, scenario):
         db.create_all()
 
     # Provide a test client to all steps
+    context.app = app
     context.client = app.test_client()
