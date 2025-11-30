@@ -1,3 +1,4 @@
+# scripts/promote_admin.py
 import os
 import sys
 from app import create_app, db
@@ -7,6 +8,7 @@ sys.path.insert(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
 )
 
+print("Connected to DB:", os.environ.get("DATABASE_URL"))
 
 # Change to username wanting to be admin
 USERNAME = "OliverKeeys"
