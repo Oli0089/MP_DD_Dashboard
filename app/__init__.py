@@ -26,7 +26,7 @@ def create_app(test_config=None):
     # set on Render for Postgres
     database_url = os.environ.get("DATABASE_URL")
 
-    # No longer using postgres but keeping incase used in the future
+    # Render reported to sometimes give unexpected URLs
     if database_url and database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
 
@@ -42,6 +42,21 @@ def create_app(test_config=None):
 
     # link database
     db.init_app(app)
+
+    # auto base roles as causes error if if a new instance is ran
+    if test_config is None:
+        with app.app_context():
+            db.create_all()
+
+            # Seed base roles if they are missing
+            from app.models import Role
+
+            base_roles = ["Admin", "Tester", "Developer", "BA", "Guest"]
+            for name in base_roles:
+                if not Role.query.filter_by(name=name).first():
+                    db.session.add(Role(name=name))
+
+            db.session.commit()
 
     login_manager.init_app(app)
     # login endpoint
