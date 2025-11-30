@@ -36,7 +36,7 @@ def main():
         db.session.add(UserRole(user_id=user.id, role_id=admin_role.id))
 
         db.session.commit()
-        print(f"User '{USERNAME}' promoted to Admin and set active."
+        print(f"User '{USERNAME}' promoted to Admin and set active.")
 
 
 if __name__ == "__main__":
