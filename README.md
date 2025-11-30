@@ -114,7 +114,7 @@ cd SoftwareDevOps_BuddyTracker
 
 Windows
  - python -m venv .venv
- - .\.venv\Scripts\activate.bat
+ - .venv\Scripts\activate.bat
 
 MacOS/Linux:
 - python3 -m venv .venv
@@ -130,6 +130,9 @@ Create a .env file in the root folder with
  - SECRET_KEY=dev-secret-key
  - FLASK_ENV=development
 
+No database configuration is needed locally.
+If DATABASE_URL is not set, the app automatically uses SQLite (dev.db).
+
 **Run the application**
 
 flask run
@@ -139,15 +142,13 @@ App runs at:
 
 ## Testing Strategy
 To be ran within the virtual envrioment
+
 **BDD Tests (Behave)**
-
-behave
+- behave
 **Unit Tests (pytest)**
-
-pytest
+- pytest
 **Linting**
-
-flake8
+- flake8
 
 All tests also run automatically via GitHub Actions
 
