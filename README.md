@@ -82,20 +82,21 @@ Deployment is handled on Render:
 **Test Admin Account**
 
 Role = Admin
-- Username:...
-- Password:...
+- Username:Admin
+- Password:Admin1234!
 
 **Test Role Based Account**
 
 Role = Tester
-- Username:...
-- Password:...
+- Username:Tester
+- Password:Tester1234!
 
 **Test Guest Account**
 
 Role = Guest
-- Username:...
-- Password:...
+- Guest is any default registered User
+- Username:GuestAccount
+- Password:Guest1234!
 
 ## Local Development Setup
 **Requirments**
