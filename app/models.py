@@ -41,20 +41,6 @@ class User(db.Model):
         cascade="all, delete-orphan",
     )
 
-    # tickets created by this user
-    tickets_created = db.relationship(
-        "Ticket",
-        foreign_keys="Ticket.created_by_id",
-        back_populates="creator",
-    )
-
-    # tickets where this user is the buddy
-    tickets_buddy = db.relationship(
-        "Ticket",
-        foreign_keys="Ticket.buddy_id",
-        back_populates="buddy",
-    )
-
     # returns admin for user if so
     @property
     def is_admin(self):
@@ -87,39 +73,3 @@ class UserRole(db.Model):
 
     user = db.relationship("User", back_populates="roles")
     role = db.relationship("Role", back_populates="users")
-
-
-class Ticket(db.Model):
-    __tablename__ = "tickets"
-
-    id = db.Column(db.Integer, primary_key=True)
-
-    # link to internal tickets
-    external_ref = db.Column(db.String(50), nullable=False)
-
-    title = db.Column(db.String(200), nullable=False)
-    status = db.Column(db.String(20), nullable=False, default="open")
-    created_at = db.Column(
-        db.DateTime,
-        default=datetime.utcnow
-    )
-    ready_at = db.Column(db.DateTime, nullable=True)
-
-    # who raised the ticket
-    created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    # who is the buddy on this ticket
-    buddy_id = db.Column(
-        db.Integer,
-        db.ForeignKey("users.id"), nullable=True
-    )
-
-    creator = db.relationship(
-        "User",
-        foreign_keys=[created_by_id],
-        back_populates="tickets_created",
-    )
-    buddy = db.relationship(
-        "User",
-        foreign_keys=[buddy_id],
-        back_populates="tickets_buddy",
-    )
