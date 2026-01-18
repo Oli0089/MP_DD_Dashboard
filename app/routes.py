@@ -19,10 +19,10 @@ def index():
     return render_template("index.html")
 
 
-@bp.route("/tickets")
+@bp.route("/comparison")
 @login_required
-def tickets():
-    return render_template("tickets.html")
+def comparison():
+    return render_template("comparison.html")
 
 
 # admins only
