@@ -1,9 +1,8 @@
-# Buddy Ticket Tracker (Lvl6 SEDO Project)
-A secure Flask-based ticket board for “Buddy” reviews, built for the Level 6 Software Engineering & DevOps module
+# Comparison App (MP)
+
 
 ## Overview
-The Buddy Ticket Tracker is a lightweight internal tool designed to support the QA “buddy” review workflow.
-It displays tickets awaiting review, highlights their age, supports login with rolebased permissions and provides an admin panel for managing users.
+
 
 **This application supports DevOps best practice through:**
 Automated CI via GitHub Actions
@@ -23,18 +22,8 @@ RBAC and session security (CSRF, hashed passwords, etc)
 Roles stored in the DB:
 
 - Admin – full access: manage users/roles, view everything
-- Tester / Developer / BA – create + manage tickets
+- Tester / Developer / BA
 - Guest – readonly
-
-**Ticket Managment**
-- Create tickets ready for “buddy” review
-- Buddy other users Tickets
-- View all tickets
-- Ticket ageing colour logic:
-    - Green < 1 day
-    - Amber 1–3 days
-    - Red > 3 days
-- Audit timestamps
 
 **Admin Panel**
 - List all users
@@ -58,7 +47,6 @@ Tables:
 - users
 - roles
 - user_roles (many-to-many relationship)
-- tickets
 
 Base roles (Admin, Tester, Developer, BA, Guest)
 
@@ -75,72 +63,6 @@ Deployment is handled on Render:
 - Render automatically deploys when changes are pushed to main
 - The app connects to a managed PostgreSQL instance
 
-## Production Deployment (Render)
-**Live URL:**
- - https://softwaredevops-buddytracker.onrender.com
-
-**Test Admin Account**
-
-Role = Admin
-- Username:Admin
-- Password:Admin1234!
-
-**Test Role Based Account**
-
-Role = Tester
-- Username:Tester
-- Password:Tester1234!
-
-**Test Guest Account**
-
-Role = Guest
-- Guest is any default registered User
-- Username:GuestAccount
-- Password:Guest1234!
-
-## Local Development Setup
-**Requirments**
-
-- Python 3.11+
-- Git
-- Virtual environment support (Visual Studio Code)
-
-**Clone the Repo**
-
-git clone https://github.com/Oli0089/SoftwareDevOps_BuddyTracker.git
-
-cd SoftwareDevOps_BuddyTracker
-
-**Create/activate the virtual environment**
-
-Windows
- - python -m venv .venv
- - .venv\Scripts\activate.bat
-
-MacOS/Linux:
-- python3 -m venv .venv
-- source .venv/bin/activate
-
-**Install Dependencies**
-
-pip install -r requirements.txt
-
-**Environment Variables**
-
-Create a .env file in the root folder with
- - SECRET_KEY=dev-secret-key
- - FLASK_ENV=development
-
-No database configuration is needed locally.
-If DATABASE_URL is not set, the app automatically uses SQLite (dev.db).
-
-**Run the application**
-
-flask run
-
-App runs at:
-- http://127.0.0.1:5000
-
 ## Testing Strategy
 To be ran within the virtual envrioment
 
@@ -152,8 +74,3 @@ To be ran within the virtual envrioment
 - flake8
 
 All tests also run automatically via GitHub Actions
-
-## Useful Links
-Live App: https://softwaredevops-buddytracker.onrender.com
-
-Repository: https://github.com/Oli0089/SoftwareDevOps_BuddyTracker

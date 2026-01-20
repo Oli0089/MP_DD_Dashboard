@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>{% block title %}Buddy Ticket Tracker{% endblock %}</title>
+  <title>{% block title %}MP Comparison{% endblock %}</title>
 
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -29,8 +29,8 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         {% if current_user.is_authenticated %}
           <li class="nav-item">
-            <a class="nav-link{% if request.endpoint == 'routes.tickets' %} active{% endif %}"
-              href="{{ url_for('routes.tickets') }}">Tickets</a>
+            <a class="nav-link{% if request.endpoint == 'routes.comparison' %} active{% endif %}"
+              href="{{ url_for('routes.comparison') }}">Comparison</a>
           </li>
         {% endif %}
       </ul>

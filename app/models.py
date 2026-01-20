@@ -41,20 +41,6 @@ class User(db.Model):
         cascade="all, delete-orphan",
     )
 
-    # tickets created by this user
-    tickets_created = db.relationship(
-        "Ticket",
-        foreign_keys="Ticket.created_by_id",
-        back_populates="creator",
-    )
-
-    # tickets where this user is the buddy
-    tickets_buddy = db.relationship(
-        "Ticket",
-        foreign_keys="Ticket.buddy_id",
-        back_populates="buddy",
-    )
-
     # returns admin for user if so
     @property
     def is_admin(self):
@@ -99,71 +85,3 @@ class UserRole(db.Model):
 
     user = db.relationship("User", back_populates="roles")
     role = db.relationship("Role", back_populates="users")
-
-
-class Ticket(db.Model):
-    __tablename__ = "tickets"
-
-    id = db.Column(db.Integer, primary_key=True)
-
-    # link to internal tickets
-    external_ref = db.Column(db.String(50), nullable=False)
-
-    title = db.Column(db.String(200), nullable=False)
-
-    # used for the board columns:
-    # ready_for_buddy, buddied and deleted
-    status = db.Column(
-        db.String(20),
-        nullable=False,
-        default="ready_for_buddy",
-    )
-
-    created_at = db.Column(
-        db.DateTime,
-        nullable=False,
-        default=datetime.utcnow
-    )
-
-    ready_at = db.Column(
-        db.DateTime,
-        nullable=True
-    )
-
-    # who raised the ticket
-    created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    # who is the buddy on this ticket
-    buddy_id = db.Column(
-        db.Integer,
-        db.ForeignKey("users.id"), nullable=True
-    )
-
-    creator = db.relationship(
-        "User",
-        foreign_keys=[created_by_id],
-        back_populates="tickets_created",
-    )
-    buddy = db.relationship(
-        "User",
-        foreign_keys=[buddy_id],
-        back_populates="tickets_buddy",
-    )
-
-    # used in the UI to colour code tickets
-    @property
-    def age_colour(self):
-        if not self.created_at:
-            return "success"
-
-        now = datetime.utcnow()
-        delta = now - self.created_at
-        days = delta.total_seconds() / 86400
-
-        # green if less than 1 day
-        # amber if 1–3 days
-        if days < 1:
-            return "success"
-        if days < 3:
-            return "warning"
-        # red if more than 3 days
-        return "danger"
