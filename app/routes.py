@@ -1,15 +1,15 @@
 # app/routes.py
 from datetime import datetime
-
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, current_user
-
 from app import db
 from app.models import User, Role, UserRole
 
 
 bp = Blueprint("routes", __name__)
+
+MIN_PASSWORD_LENGTH = 8
 
 
 @bp.route("/")
@@ -23,6 +23,12 @@ def index():
 @login_required
 def comparison():
     return render_template("comparison.html")
+
+
+@bp.route("/results")
+@login_required
+def results():
+    return render_template("results.html")
 
 
 # admins only
@@ -177,6 +183,26 @@ def register():
         if not password.strip() or not confirm_password.strip():
             flash("Password cannot be empty or spaces only.", "danger")
             return redirect(url_for("auth.register"))
+
+        # minimum length for the password
+        if len(password.strip()) < MIN_PASSWORD_LENGTH:
+            msg = (
+                f"Password must be at least "
+                f"{MIN_PASSWORD_LENGTH} characters long."
+            )
+            flash(msg, "danger")
+            return redirect(url_for("routes.register"))
+
+        # password must contain at least one letter and one number
+        has_letter = any(c.isalpha() for c in password)
+        has_number = any(c.isdigit() for c in password)
+
+        if not (has_letter and has_number):
+            flash(
+                "Password must contain at least one letter and one number.",
+                "danger"
+            )
+            return redirect(url_for("routes.register"))
 
         # passwords must match
         if password != confirm_password:

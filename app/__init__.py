@@ -16,7 +16,7 @@ csrf = CSRFProtect()  # CSRF protection for forms
 def create_app(test_config=None):
     app = Flask(__name__)
 
-    # to be updated
+    # sent on render, dev-secert to fall back on for testing
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
 
     # protection on post forms
@@ -42,6 +42,21 @@ def create_app(test_config=None):
 
     # link database
     db.init_app(app)
+
+    # auto base roles as causes error if if a new instance is ran
+    if test_config is None:
+        with app.app_context():
+            db.create_all()
+
+            # Seed base roles if they are missing
+            from app.models import Role
+
+            base_roles = ["Admin", "Tester", "Developer", "BA", "Guest"]
+            for name in base_roles:
+                if not Role.query.filter_by(name=name).first():
+                    db.session.add(Role(name=name))
+
+            db.session.commit()
 
     login_manager.init_app(app)
     # login endpoint
