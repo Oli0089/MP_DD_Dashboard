@@ -25,6 +25,12 @@ def comparison():
     return render_template("comparison.html")
 
 
+@bp.route("/results")
+@login_required
+def results():
+    return render_template("results.html")
+
+
 # admins only
 @bp.route("/admin")
 @login_required

@@ -8,4 +8,4 @@ Feature: Login and role access
   Scenario: Successful login with valid credentials
     Given a user exists with username "testuser" and password "Password1"
     When I log in with username "testuser" and password "Password1"
-    Then I should see "Buddy Ticket Tracker"
+    Then I should see "Covéa Insurance"

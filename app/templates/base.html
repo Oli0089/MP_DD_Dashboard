@@ -15,7 +15,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container-fluid"> <!-- use fluid for better mobile spacing -->
     <!-- Brand (always visible) -->
-    <a class="navbar-brand fw-semibold" href="{{ url_for('routes.index') }}">Buddy Tracker</a>
+    <a class="navbar-brand fw-semibold" href="{{ url_for('routes.index') }}">Covéa Insurance</a>
 
     <!-- Burger icon-->
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
@@ -31,6 +31,10 @@
           <li class="nav-item">
             <a class="nav-link{% if request.endpoint == 'routes.comparison' %} active{% endif %}"
               href="{{ url_for('routes.comparison') }}">Comparison</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link{% if request.endpoint == 'routes.results' %} active{% endif %}"
+              href="{{ url_for('routes.results') }}">Results</a>
           </li>
         {% endif %}
       </ul>
