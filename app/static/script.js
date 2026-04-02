@@ -24,3 +24,44 @@ function confirmOwnRoleChange() {
   });
 }
 document.addEventListener("DOMContentLoaded", confirmOwnRoleChange);
+
+// Comparison page variant display logic
+const swhDropdown = document.getElementById("swh_transaction");
+const caBadge = document.getElementById("var-ca");
+const cvBadge = document.getElementById("var-cv");
+const cxBadge = document.getElementById("var-cx");
+
+if (swhDropdown && caBadge && cvBadge && cxBadge) {
+  swhDropdown.addEventListener("change", function () {
+    const selectedText = swhDropdown.value;
+
+    // reset all to grey first
+    caBadge.className = "badge bg-light text-dark border me-2";
+    cvBadge.className = "badge bg-light text-dark border me-2";
+    cxBadge.className = "badge bg-light text-dark border";
+
+    if (!selectedText) {
+      return;
+    }
+
+    // CA and CV always included once a transaction is selected
+    caBadge.className = "badge bg-secondary me-2";
+    cvBadge.className = "badge bg-secondary me-2";
+
+    // CDL transactions also include CX
+    if (selectedText.includes("CDL")) {
+      cxBadge.className = "badge bg-secondary";
+    }
+  });
+}
+
+
+// Set Previous DD to latest option on page load
+document.addEventListener("DOMContentLoaded", function () {
+  const previousDD = document.getElementById("previous_dd");
+
+  if (previousDD && previousDD.options.length > 0) {
+    // Select the last option (latest DD)
+    previousDD.selectedIndex = previousDD.options.length - 1;
+  }
+});
