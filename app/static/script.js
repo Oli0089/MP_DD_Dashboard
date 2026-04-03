@@ -33,23 +33,25 @@ const cxBadge = document.getElementById("var-cx");
 
 if (swhDropdown && caBadge && cvBadge && cxBadge) {
   swhDropdown.addEventListener("change", function () {
-    const selectedText = swhDropdown.value;
+    const selectedOption = swhDropdown.options[swhDropdown.selectedIndex];
 
-    // reset all to grey first
+    // reset all to grey
     caBadge.className = "badge bg-light text-dark border me-2";
     cvBadge.className = "badge bg-light text-dark border me-2";
     cxBadge.className = "badge bg-light text-dark border";
 
-    if (!selectedText) {
-      return;
+    const variants = JSON.parse(selectedOption.dataset.variants || "[]");
+
+    // highlight based on config
+    if (variants.includes("CA")) {
+      caBadge.className = "badge bg-secondary me-2";
     }
 
-    // CA and CV always included once a transaction is selected
-    caBadge.className = "badge bg-secondary me-2";
-    cvBadge.className = "badge bg-secondary me-2";
+    if (variants.includes("CV")) {
+      cvBadge.className = "badge bg-secondary me-2";
+    }
 
-    // CDL transactions also include CX
-    if (selectedText.includes("CDL")) {
+    if (variants.includes("CX")) {
       cxBadge.className = "badge bg-secondary";
     }
   });

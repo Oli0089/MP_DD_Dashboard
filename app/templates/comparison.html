@@ -8,41 +8,46 @@
     <div class="card-body">
       <h3 class="card-title mb-4">Run Comparison</h3>
 
-      <form>
+      <form method="POST">
         <!-- SWH transaction -->
         <div class="mb-3">
           <label for="swh_transaction" class="form-label">SWH Transaction</label>
-          <select class="form-select" id="swh_transaction" name="swh_transaction">
-            <option value="" selected>Select a transaction</option>
-            <option>Acturis NB Comp and TPFT</option>
-            <option>Applied NB Comp and TPFT</option>
-            <option>CDL Brokerled RNWL Comp</option>
-            <option>CDL NB Comp</option>
-            <option>CDL NB TPFT</option>
-            <option>CDL InsurerLed RNWL Comp</option>
-            <option>OGI NB Comp and TPFT</option>
-          </select>
+            <select class="form-select" id="swh_transaction" name="swh_transaction">
+              <option value="" selected disabled>Select a transaction</option>
+              {% for transaction in swh_transactions %}
+                <option
+                  value="{{ transaction.key }}"
+                  data-variants='{{ transaction.variants | tojson }}'
+                >
+                  {{ transaction.name }}
+                </option>
+              {% endfor %}
+            </select>
         </div>
 
         <!-- Previous DD -->
         <div class="mb-3">
           <label for="previous_dd" class="form-label">Previous DD</label>
           <select class="form-select" id="previous_dd" name="previous_dd">
-            <option selected disabled>Select previous DD</option>
-            <option>DD139.20</option>
-            <option>DD139.10</option>
+            {% if dd_versions %}
+              {% for dd in dd_versions[:-1] %}
+                <option {% if dd == previous_dd %}selected{% endif %}>{{ dd }}</option>
+              {% endfor %}
+            {% else %}
+              <option selected disabled>Select previous DD</option>
+            {% endif %}
           </select>
         </div>
 
         <!-- New DD -->
         <div class="mb-3">
-          <label for="new_dd" class="form-label">New DD</label>
+          <label for="new_dd" class="form-label">Latest DD</label>
           <input
             type="text"
             class="form-control"
             id="new_dd"
             name="new_dd"
-            value="DD140.00"
+            value="{{ latest_dd }}"
             readonly
           >
         </div>
@@ -68,72 +73,23 @@
   <!-- DD Run Tracker -->
   <div class="card shadow-sm mt-4">
     <div class="card-body">
-        <div class="row g-3">
-
-        <div class="col-md-3">
+      <div class="row g-3">
+        {% for transaction in swh_transactions %}
+          <div class="col-md-3">
             <div class="card text-center">
-            <div class="card-body p-3">
-                <h6 class="mb-2">Acturis NB</h6>
-                <span id="status-acturis" class="badge bg-light text-dark border">Not Run</span>
+              <div class="card-body p-3">
+                <h6 class="mb-2">{{ transaction.short_name }}</h6>
+                <span
+                  id="status-{{ transaction.key }}"
+                  class="badge bg-light text-dark border"
+                >
+                  Not Run
+                </span>
+              </div>
             </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card text-center">
-            <div class="card-body p-3">
-                <h6 class="mb-2">Applied NB</h6>
-                <span id="status-applied" class="badge bg-light text-dark border">Not Run</span>
-            </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card text-center">
-            <div class="card-body p-3">
-                <h6 class="mb-2">CDL Brokerled RNWL</h6>
-                <span id="status-cdl-brnwl" class="badge bg-light text-dark border">Not Run</span>
-            </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card text-center">
-            <div class="card-body p-3">
-                <h6 class="mb-2">CDL NB COMP</h6>
-                <span id="status-cdl-nb-comp" class="badge bg-light text-dark border">Not Run</span>
-            </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card text-center">
-            <div class="card-body p-3">
-                <h6 class="mb-2">CDL NB TPFT</h6>
-                <span id="status-cdl-nb-tpft" class="badge bg-light text-dark border">Not Run</span>
-            </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card text-center">
-            <div class="card-body p-3">
-                <h6 class="mb-2">CDL InsurerLed RNWL</h6>
-                <span id="status-cdl-irnwl" class="badge bg-light text-dark border">Not Run</span>
-            </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card text-center">
-            <div class="card-body p-3">
-                <h6 class="mb-2">OGI NB</h6>
-                <span id="status-ogi" class="badge bg-light text-dark border">Not Run</span>
-            </div>
-            </div>
-        </div>
-
-        </div>
+          </div>
+        {% endfor %}
+      </div>
 
       <!-- Finalise button -->
       <div class="text-center mt-4">
