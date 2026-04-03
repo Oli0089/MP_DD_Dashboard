@@ -1,6 +1,106 @@
 {% extends "base.html" %}
 {% block title %}Comparison{% endblock %}
 {% block content %}
-<h1>Comparison Page</h1>
-<p>This page will show comparisons soon</p>
+<div class="container mt-2">
+
+  <!-- Main comparison section -->
+  <div class="card shadow-sm mt-4">
+    <div class="card-body">
+      <h3 class="card-title mb-4">Run Comparison</h3>
+
+      <form method="POST">
+        <!-- SWH transaction -->
+        <div class="mb-3">
+          <label for="swh_transaction" class="form-label">SWH Transaction</label>
+            <select class="form-select" id="swh_transaction" name="swh_transaction">
+              <option value="" selected disabled>Select a transaction</option>
+              {% for transaction in swh_transactions %}
+                <option
+                  value="{{ transaction.key }}"
+                  data-variants='{{ transaction.variants | tojson }}'
+                >
+                  {{ transaction.name }}
+                </option>
+              {% endfor %}
+            </select>
+        </div>
+
+        <!-- Previous DD -->
+        <div class="mb-3">
+          <label for="previous_dd" class="form-label">Previous DD</label>
+          <select class="form-select" id="previous_dd" name="previous_dd">
+            {% if dd_versions %}
+              {% for dd in dd_versions[:-1] %}
+                <option {% if dd == previous_dd %}selected{% endif %}>{{ dd }}</option>
+              {% endfor %}
+            {% else %}
+              <option selected disabled>Select previous DD</option>
+            {% endif %}
+          </select>
+        </div>
+
+        <!-- New DD -->
+        <div class="mb-3">
+          <label for="new_dd" class="form-label">Latest DD</label>
+          <input
+            type="text"
+            class="form-control"
+            id="new_dd"
+            name="new_dd"
+            value="{{ latest_dd }}"
+            readonly
+          >
+        </div>
+
+        <!-- Variants included -->
+        <div class="mb-4">
+          <label class="form-label">Variants Included</label>
+          <div>
+            <span id="var-ca" class="badge bg-light text-dark border me-2">CA</span>
+            <span id="var-cv" class="badge bg-light text-dark border me-2">CV</span>
+            <span id="var-cx" class="badge bg-light text-dark border">CX</span>
+          </div>
+        </div>
+
+        <!-- Run button -->
+        <button type="submit" class="btn btn-primary">
+          Run Comparison
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- DD Run Tracker -->
+  <div class="card shadow-sm mt-4">
+    <div class="card-body">
+      <div class="row g-3">
+        {% for transaction in swh_transactions %}
+          <div class="col-md-3">
+            <div class="card text-center">
+              <div class="card-body p-3">
+                <h6 class="mb-2">{{ transaction.short_name }}</h6>
+                <span
+                  id="status-{{ transaction.key }}"
+                  class="badge bg-light text-dark border"
+                >
+                  Not Run
+                </span>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- Finalise button -->
+      <div class="text-center mt-4">
+        <button class="btn btn-secondary" disabled>
+          Finalise DD Run
+        </button>
+        <div class="form-text">
+          Available once all SWH comparisons are complete.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

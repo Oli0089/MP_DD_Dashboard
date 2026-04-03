@@ -5,6 +5,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models import User, Role, UserRole
+from app.config.swh import SWH_TRANSACTIONS
+from app.file_discovery import find_all_dd_versions
 
 
 bp = Blueprint("routes", __name__)
@@ -19,10 +21,34 @@ def index():
     return render_template("index.html")
 
 
-@bp.route("/comparison")
+@bp.route("/comparison", methods=["GET", "POST"])
 @login_required
 def comparison():
-    return render_template("comparison.html")
+    dd_versions = find_all_dd_versions()
+    latest_dd = ""
+    previous_dd = ""
+    selected_transaction = ""
+
+    if dd_versions:
+        latest_dd = dd_versions[-1]
+
+        # if only one found, use the same for now
+        if len(dd_versions) == 1:
+            previous_dd = dd_versions[0]
+        else:
+            previous_dd = dd_versions[-2]
+
+    if request.method == "POST":
+        selected_transaction = request.form.get("swh_transaction", "")
+
+    return render_template(
+        "comparison.html",
+        swh_transactions=SWH_TRANSACTIONS,
+        dd_versions=dd_versions,
+        latest_dd=latest_dd,
+        previous_dd=previous_dd,
+        selected_transaction=selected_transaction
+    )
 
 
 @bp.route("/results")

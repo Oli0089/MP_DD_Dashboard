@@ -1,6 +1,73 @@
 {% extends "base.html" %}
-{% block title %}Comparison{% endblock %}
+{% block title %}Results{% endblock %}
 {% block content %}
-<h1>Results</h1>
-<p>This page will show Results and Audits soon</p>
+
+<div class="container mt-2">
+
+  <div class="card shadow-sm mt-4">
+    <div class="card-body">
+      <h3 class="card-title mb-4">Recent DD Runs</h3>
+
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>DD Version</th>
+              <th>Compared Against</th>
+              <th>Status</th>
+              <th>Run By</th>
+              <th>Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>DD140.20</td>
+              <td>DD140.10</td>
+              <td><span class="badge bg-success">Passed</span></td>
+              <td>Oliver</td>
+              <td>12/04/2026 10:42</td>
+              <td></td>
+            </tr>
+
+            <tr>
+              <td>DD140.10</td>
+              <td>DD140.00</td>
+              <td><span class="badge bg-danger">Failed</span></td>
+              <td>Oliver</td>
+              <td>10/04/2026 09:15</td>
+              <td>
+                <button class="btn btn-sm btn-outline-secondary" type="button">
+                  View
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="6" class="bg-light">
+                <strong>Failed SWH Transactions:</strong><br>
+                CDL NB Comp failed on variants: CX<br>
+                OGI NB failed on variants: CA, CV
+              </td>
+            </tr>
+
+            <tr>
+              <td>DD140.00</td>
+              <td>DD139.20</td>
+              <td><span class="badge bg-success">Passed</span></td>
+              <td>Oliver</td>
+              <td>05/04/2026 14:30</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="form-text mt-3">
+        Showing the most recent DD runs.
+      </div>
+    </div>
+  </div>
+
+</div>
+
 {% endblock %}
