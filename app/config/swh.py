@@ -18,7 +18,6 @@ SWH_TRANSACTIONS = [
         "name": "CDL NB Comp",
         "short_name": "CDL NB Comp",
         "variants": ["CA", "CV", "CX"],
-        "folder_keywords": ["cdl", "brokerled", "rnwl"],
         "folder_keywords": ["cdl", "nb", "comp"]
     },
     {
