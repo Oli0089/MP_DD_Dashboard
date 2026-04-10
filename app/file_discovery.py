@@ -142,10 +142,15 @@ def build_comparison_file_pairs(folder_keywords, previous_dd, latest_dd):
     if not os.path.exists(RESULTS_ROOT):
         return comparison_pairs
 
-    best_folder_path = None
-    best_score = 0
+    previous_folder_path = None
+    latest_folder_path = None
+    previous_score = 0
+    latest_score = 0
 
-    # find the best matching top folder
+    previous_dd_search = previous_dd.replace(".", "")
+    latest_dd_search = latest_dd.replace(".", "")
+
+    # find best top folder for previous DD and latest DD separately
     for top_folder in os.listdir(RESULTS_ROOT):
         top_path = os.path.join(RESULTS_ROOT, top_folder)
 
@@ -159,44 +164,53 @@ def build_comparison_file_pairs(folder_keywords, previous_dd, latest_dd):
             if word in folder_name:
                 score += 1
 
-        if score > best_score:
-            best_score = score
-            best_folder_path = top_path
-
-    minimum_score = len(folder_keywords)
-
-    if not best_folder_path or best_score < minimum_score:
-        return comparison_pairs
-
-    # look inside the matched folder for previous/latest DD variant folders
-    for inner_folder in os.listdir(best_folder_path):
-        inner_path = os.path.join(best_folder_path, inner_folder)
-
-        if not os.path.isdir(inner_path):
+        if score < len(folder_keywords):
             continue
 
-        inner_folder_lower = inner_folder.lower()
+        folder_name_no_spaces = folder_name.replace(" ", "")
 
-        variant = None
-        if inner_folder_lower.startswith("ca "):
-            variant = "CA"
-        elif inner_folder_lower.startswith("cv "):
-            variant = "CV"
-        elif inner_folder_lower.startswith("cx "):
-            variant = "CX"
+        if previous_dd_search in folder_name_no_spaces and score > previous_score:
+            previous_folder_path = top_path
+            previous_score = score
 
-        if not variant:
-            continue
+        if latest_dd_search in folder_name_no_spaces and score > latest_score:
+            latest_folder_path = top_path
+            latest_score = score
 
-        csv_path = os.path.join(inner_path, BROKER_OUTPUT_FILE)
+    def process_variant_folder(folder_path, dd_value, side_name):
+        if not folder_path:
+            return
 
-        if not os.path.exists(csv_path):
-            continue
+        dd_search = dd_value.replace(".", " ")
 
-        if f"dd{previous_dd.replace('.', ' ')}" in inner_folder_lower:
-            comparison_pairs[variant]["previous"] = csv_path
+        for inner_folder in os.listdir(folder_path):
+            inner_path = os.path.join(folder_path, inner_folder)
 
-        if f"dd{latest_dd.replace('.', ' ')}" in inner_folder_lower:
-            comparison_pairs[variant]["latest"] = csv_path
+            if not os.path.isdir(inner_path):
+                continue
+
+            inner_folder_lower = inner_folder.lower()
+
+            if f"dd{dd_search}" not in inner_folder_lower:
+                continue
+
+            variant = None
+            if inner_folder_lower.startswith("ca "):
+                variant = "CA"
+            elif inner_folder_lower.startswith("cv "):
+                variant = "CV"
+            elif inner_folder_lower.startswith("cx "):
+                variant = "CX"
+
+            if not variant:
+                continue
+
+            csv_path = os.path.join(inner_path, BROKER_OUTPUT_FILE)
+
+            if os.path.exists(csv_path):
+                comparison_pairs[variant][side_name] = csv_path
+
+    process_variant_folder(previous_folder_path, previous_dd, "previous")
+    process_variant_folder(latest_folder_path, latest_dd, "latest")
 
     return comparison_pairs
