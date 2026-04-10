@@ -1,11 +1,12 @@
 # app/routes.py
 from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models import User, Role, UserRole
 from app.config.swh import SWH_TRANSACTIONS
+from app.comparison import compare_swh_variants
 from app.file_discovery import (
     find_all_dd_versions,
     find_variants_for_dd,
@@ -34,6 +35,14 @@ def comparison():
     selected_transaction = ""
     found_variants_map = {}
     comparison_file_pairs = {}
+    comparison_result = {}
+
+    tracker_statuses = session.get("tracker_statuses", {})
+
+    all_run = all(
+        tracker_statuses.get(transaction["key"]) in ["Passed", "Failed"]
+        for transaction in SWH_TRANSACTIONS
+    )
 
     if dd_versions:
         latest_dd = dd_versions[-1]
@@ -51,20 +60,54 @@ def comparison():
             )
 
     if request.method == "POST":
-        selected_transaction = request.form.get("swh_transaction", "")
-        previous_dd = request.form.get("previous_dd", previous_dd)
+        action = request.form.get("action")
 
-        transaction = next(
-            (item for item in SWH_TRANSACTIONS if item["key"] == selected_transaction),
-            None
-        )
+        if action == "finalise_dd_run":
+            session.pop("tracker_statuses", None)
+            session.pop("locked_previous_dd", None)
 
-        if transaction:
-            comparison_file_pairs = build_comparison_file_pairs(
-                transaction["folder_keywords"],
-                previous_dd,
-                latest_dd
+            tracker_statuses = {}
+            comparison_result = {}
+            comparison_file_pairs = {}
+            selected_transaction = ""
+
+        else:
+            selected_transaction = request.form.get("swh_transaction", "")
+            previous_dd = request.form.get("previous_dd", previous_dd)
+
+            locked_previous_dd = session.get("locked_previous_dd")
+
+            if locked_previous_dd:
+                previous_dd = locked_previous_dd
+            else:
+                session["locked_previous_dd"] = previous_dd
+
+            transaction = next(
+                (item for item in SWH_TRANSACTIONS if item["key"] == selected_transaction),
+                None
             )
+
+            if transaction:
+                comparison_file_pairs = build_comparison_file_pairs(
+                    transaction["folder_keywords"],
+                    previous_dd,
+                    latest_dd
+                )
+
+                comparison_result = compare_swh_variants(comparison_file_pairs)
+
+                if comparison_result["overall_status"] == "passed":
+                    tracker_statuses[selected_transaction] = "Passed"
+                else:
+                    tracker_statuses[selected_transaction] = "Failed"
+
+                session["tracker_statuses"] = tracker_statuses
+
+
+    all_run = all(
+        tracker_statuses.get(transaction["key"]) in ["Passed", "Failed"]
+        for transaction in SWH_TRANSACTIONS
+    )
 
     return render_template(
         "comparison.html",
@@ -74,7 +117,10 @@ def comparison():
         previous_dd=previous_dd,
         selected_transaction=selected_transaction,
         found_variants_map=found_variants_map,
-        comparison_file_pairs=comparison_file_pairs
+        comparison_file_pairs=comparison_file_pairs,
+        comparison_result=comparison_result,
+        tracker_statuses=tracker_statuses,
+        all_run=all_run
     )
 
 
