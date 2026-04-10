@@ -6,7 +6,11 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models import User, Role, UserRole
 from app.config.swh import SWH_TRANSACTIONS
-from app.file_discovery import find_all_dd_versions
+from app.file_discovery import (
+    find_all_dd_versions,
+    find_variants_for_dd,
+    build_comparison_file_pairs
+)
 
 
 bp = Blueprint("routes", __name__)
@@ -28,18 +32,39 @@ def comparison():
     latest_dd = ""
     previous_dd = ""
     selected_transaction = ""
+    found_variants_map = {}
+    comparison_file_pairs = {}
 
     if dd_versions:
         latest_dd = dd_versions[-1]
 
-        # if only one found, use the same for now
         if len(dd_versions) == 1:
             previous_dd = dd_versions[0]
         else:
             previous_dd = dd_versions[-2]
 
+        # build found variants for all SWHs using latest DD
+        for transaction in SWH_TRANSACTIONS:
+            found_variants_map[transaction["key"]] = find_variants_for_dd(
+                transaction["folder_keywords"],
+                latest_dd
+            )
+
     if request.method == "POST":
         selected_transaction = request.form.get("swh_transaction", "")
+        previous_dd = request.form.get("previous_dd", previous_dd)
+
+        transaction = next(
+            (item for item in SWH_TRANSACTIONS if item["key"] == selected_transaction),
+            None
+        )
+
+        if transaction:
+            comparison_file_pairs = build_comparison_file_pairs(
+                transaction["folder_keywords"],
+                previous_dd,
+                latest_dd
+            )
 
     return render_template(
         "comparison.html",
@@ -47,7 +72,9 @@ def comparison():
         dd_versions=dd_versions,
         latest_dd=latest_dd,
         previous_dd=previous_dd,
-        selected_transaction=selected_transaction
+        selected_transaction=selected_transaction,
+        found_variants_map=found_variants_map,
+        comparison_file_pairs=comparison_file_pairs
     )
 
 

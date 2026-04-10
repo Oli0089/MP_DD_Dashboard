@@ -9,6 +9,7 @@
       <h3 class="card-title mb-4">Run Comparison</h3>
 
       <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <!-- SWH transaction -->
         <div class="mb-3">
           <label for="swh_transaction" class="form-label">SWH Transaction</label>
@@ -18,6 +19,7 @@
                 <option
                   value="{{ transaction.key }}"
                   data-variants='{{ transaction.variants | tojson }}'
+                  data-found-variants='{{ found_variants_map.get(transaction.key, []) | tojson }}'
                 >
                   {{ transaction.name }}
                 </option>
@@ -30,7 +32,7 @@
           <label for="previous_dd" class="form-label">Previous DD</label>
           <select class="form-select" id="previous_dd" name="previous_dd">
             {% if dd_versions %}
-              {% for dd in dd_versions[:-1] %}
+              {% for dd in dd_versions[:-1] | reverse %}
                 <option {% if dd == previous_dd %}selected{% endif %}>{{ dd }}</option>
               {% endfor %}
             {% else %}

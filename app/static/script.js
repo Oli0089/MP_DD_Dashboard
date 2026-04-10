@@ -25,45 +25,71 @@ function confirmOwnRoleChange() {
 }
 document.addEventListener("DOMContentLoaded", confirmOwnRoleChange);
 
-// Comparison page variant display logic
+// Comparison page - update variant badges when SWH transaction changes
+
 const swhDropdown = document.getElementById("swh_transaction");
 const caBadge = document.getElementById("var-ca");
 const cvBadge = document.getElementById("var-cv");
 const cxBadge = document.getElementById("var-cx");
 
-if (swhDropdown && caBadge && cvBadge && cxBadge) {
-  swhDropdown.addEventListener("change", function () {
-    const selectedOption = swhDropdown.options[swhDropdown.selectedIndex];
-
-    // reset all to grey
-    caBadge.className = "badge bg-light text-dark border me-2";
-    cvBadge.className = "badge bg-light text-dark border me-2";
-    cxBadge.className = "badge bg-light text-dark border";
-
-    const variants = JSON.parse(selectedOption.dataset.variants || "[]");
-
-    // highlight based on config
-    if (variants.includes("CA")) {
-      caBadge.className = "badge bg-secondary me-2";
-    }
-
-    if (variants.includes("CV")) {
-      cvBadge.className = "badge bg-secondary me-2";
-    }
-
-    if (variants.includes("CX")) {
-      cxBadge.className = "badge bg-secondary";
-    }
-  });
+function resetBadge(badge, last = false) {
+  if (last) {
+    badge.className = "badge bg-light text-dark border";
+  } else {
+    badge.className = "badge bg-light text-dark border me-2";
+  }
 }
 
+function setBadge(badge, variant, expectedVariants, foundVariants, last = false) {
+  resetBadge(badge, last);
 
-// Set Previous DD to latest option on page load
-document.addEventListener("DOMContentLoaded", function () {
-  const previousDD = document.getElementById("previous_dd");
-
-  if (previousDD && previousDD.options.length > 0) {
-    // Select the last option (latest DD)
-    previousDD.selectedIndex = previousDD.options.length - 1;
+  if (!expectedVariants.includes(variant)) {
+    return;
   }
-});
+
+  if (foundVariants.includes(variant)) {
+    if (last) {
+      badge.className = "badge bg-success";
+    } else {
+      badge.className = "badge bg-success me-2";
+    }
+    return;
+  }
+
+  if (last) {
+    badge.className = "badge bg-danger";
+  } else {
+    badge.className = "badge bg-danger me-2";
+  }
+}
+
+function updateVariantBadges() {
+  if (!swhDropdown) {
+    return;
+  }
+
+  const selectedOption = swhDropdown.options[swhDropdown.selectedIndex];
+
+  if (!selectedOption || !selectedOption.value) {
+    resetBadge(caBadge);
+    resetBadge(cvBadge);
+    resetBadge(cxBadge, true);
+    return;
+  }
+
+  const expectedVariants = JSON.parse(
+    selectedOption.dataset.variants || "[]"
+  );
+
+  const foundVariants = JSON.parse(
+    selectedOption.dataset.foundVariants || "[]"
+  );
+
+  setBadge(caBadge, "CA", expectedVariants, foundVariants);
+  setBadge(cvBadge, "CV", expectedVariants, foundVariants);
+  setBadge(cxBadge, "CX", expectedVariants, foundVariants, true);
+}
+
+if (swhDropdown) {
+  swhDropdown.addEventListener("change", updateVariantBadges);
+}
