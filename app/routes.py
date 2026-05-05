@@ -4,7 +4,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
-from app.models import User, Role, UserRole
+from app.models import User, Role, UserRole, DDRun, SWHResult
 from app.config.swh import SWH_TRANSACTIONS
 from app.comparison import compare_swh_variants
 from app.file_discovery import (
@@ -38,6 +38,7 @@ def comparison():
     comparison_result = {}
 
     tracker_statuses = session.get("tracker_statuses", {})
+    tracker_results = session.get("tracker_results", {})
 
     all_run = all(
         tracker_statuses.get(transaction["key"]) in ["Passed", "Failed"]
@@ -63,7 +64,42 @@ def comparison():
         action = request.form.get("action")
 
         if action == "finalise_dd_run":
+            # Overall run fails if any SWH failed
+            overall_status = "Passed"
+
+            if "Failed" in tracker_statuses.values():
+                overall_status = "Failed"
+
+            # Save the finalised DD run
+            dd_run = DDRun(
+                dd_version=latest_dd,
+                compared_against=session.get("locked_previous_dd", previous_dd),
+                status=overall_status,
+                user_id=current_user.id
+            )
+
+            db.session.add(dd_run)
+            db.session.flush()
+
+            # Save each SWH result under the DD run
+            for transaction in SWH_TRANSACTIONS:
+                result = tracker_results.get(transaction["key"], {})
+                failed_variants = result.get("failed_variants", [])
+
+                swh_result = SWHResult(
+                    dd_run_id=dd_run.id,
+                    swh_key=transaction["key"],
+                    swh_name=transaction["short_name"],
+                    status=tracker_statuses.get(transaction["key"], "Not Run"),
+                    failed_variants=",".join(failed_variants)
+                )
+
+                db.session.add(swh_result)
+
+            db.session.commit()
+            # Clear current working run
             session.pop("tracker_statuses", None)
+            session.pop("tracker_results", None)
             session.pop("locked_previous_dd", None)
 
             tracker_statuses = {}
@@ -91,15 +127,37 @@ def comparison():
                 comparison_file_pairs = build_comparison_file_pairs(
                     transaction["folder_keywords"],
                     previous_dd,
-                    latest_dd
+                    latest_dd,
+                    transaction["output_file"],
+                    transaction["variants"]
                 )
 
                 comparison_result = compare_swh_variants(comparison_file_pairs)
 
+                print(selected_transaction)
+                print(comparison_result)
+
+                # Set simple status (used by tiles)
                 if comparison_result["overall_status"] == "passed":
-                    tracker_statuses[selected_transaction] = "Passed"
+                    status = "Passed"
                 else:
-                    tracker_statuses[selected_transaction] = "Failed"
+                    status = "Failed"
+
+                tracker_statuses[selected_transaction] = status
+                session["tracker_statuses"] = tracker_statuses
+
+                # NEW: store failed variants for DB later
+                tracker_results = session.get("tracker_results", {})
+
+                failed_variants = [
+                    v for v, r in comparison_result["variant_results"].items()
+                    if r["status"] != "passed"
+                ]
+
+                tracker_results[selected_transaction] = {
+                    "status": status,
+                    "failed_variants": failed_variants
+                }
 
                 session["tracker_statuses"] = tracker_statuses
 
@@ -120,7 +178,8 @@ def comparison():
         comparison_file_pairs=comparison_file_pairs,
         comparison_result=comparison_result,
         tracker_statuses=tracker_statuses,
-        all_run=all_run
+        all_run=all_run,
+        tracker_results=tracker_results
     )
 
 
