@@ -100,6 +100,12 @@ def find_variants_for_dd(folder_keywords, dd_version):
             if word in folder_name:
                 score += 1
 
+        # only considers latest DD
+        folder_dd = dd_version.replace(".", "")
+
+        if folder_dd not in folder_name.replace(" ", ""):
+            continue
+
         if score > best_score:
             best_score = score
             best_folder_path = top_path
@@ -132,11 +138,18 @@ def find_variants_for_dd(folder_keywords, dd_version):
     return sorted(found_variants)
 
 
-def build_comparison_file_pairs(folder_keywords, previous_dd, latest_dd):
+def build_comparison_file_pairs(
+        folder_keywords,
+        previous_dd,
+        latest_dd,
+        output_file,
+        expected_variants
+    ):
+
+    # Only create file pairs for variants expected by this SWH
     comparison_pairs = {
-        "CA": {"previous": None, "latest": None},
-        "CV": {"previous": None, "latest": None},
-        "CX": {"previous": None, "latest": None}
+        variant: {"previous": None, "latest": None}
+        for variant in expected_variants
     }
 
     if not os.path.exists(RESULTS_ROOT):
@@ -205,7 +218,7 @@ def build_comparison_file_pairs(folder_keywords, previous_dd, latest_dd):
             if not variant:
                 continue
 
-            csv_path = os.path.join(inner_path, BROKER_OUTPUT_FILE)
+            csv_path = os.path.join(inner_path, output_file)
 
             if os.path.exists(csv_path):
                 comparison_pairs[variant][side_name] = csv_path
