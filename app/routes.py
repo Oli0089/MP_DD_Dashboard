@@ -186,7 +186,15 @@ def comparison():
 @bp.route("/results")
 @login_required
 def results():
-    return render_template("results.html")
+    # Show the latest finalised DD runs first
+    dd_runs = (
+        DDRun.query
+        .order_by(DDRun.created_at.desc())
+        .limit(10)
+        .all()
+    )
+
+    return render_template("results.html", dd_runs=dd_runs)
 
 
 # admins only
