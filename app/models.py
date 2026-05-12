@@ -105,8 +105,11 @@ class DDRun(db.Model):
     # When the run was finalised
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Who ran the DD (links to existing users table)
+    # Who ran the DD - actual value
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+
+    # Allows Results page for full User object
+    user = db.relationship("User")
 
     # Relationship to all SWH results under this run
     results = db.relationship(
