@@ -139,12 +139,12 @@ def find_variants_for_dd(folder_keywords, dd_version):
 
 
 def build_comparison_file_pairs(
-        folder_keywords,
-        previous_dd,
-        latest_dd,
-        output_file,
-        expected_variants
-    ):
+    folder_keywords,
+    previous_dd,
+    latest_dd,
+    output_file,
+    expected_variants
+):
 
     # Only create file pairs for variants expected by this SWH
     comparison_pairs = {
@@ -182,11 +182,17 @@ def build_comparison_file_pairs(
 
         folder_name_no_spaces = folder_name.replace(" ", "")
 
-        if previous_dd_search in folder_name_no_spaces and score > previous_score:
+        if (
+            previous_dd_search in folder_name_no_spaces
+            and score > previous_score
+        ):
             previous_folder_path = top_path
             previous_score = score
 
-        if latest_dd_search in folder_name_no_spaces and score > latest_score:
+        if (
+            latest_dd_search in folder_name_no_spaces
+            and score > latest_score
+        ):
             latest_folder_path = top_path
             latest_score = score
 

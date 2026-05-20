@@ -144,6 +144,5 @@ class SWHResult(db.Model):
         nullable=False
     )
 
-
     # Relationship back to DDRun
     dd_run = db.relationship("DDRun", back_populates="results")

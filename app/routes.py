@@ -1,6 +1,14 @@
 # app/routes.py
 from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session
+from flask import (
+    Blueprint,
+    render_template,
+    redirect,
+    url_for,
+    flash,
+    request,
+    session,
+)
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
@@ -73,7 +81,10 @@ def comparison():
             # Save the finalised DD run
             dd_run = DDRun(
                 dd_version=latest_dd,
-                compared_against=session.get("locked_previous_dd", previous_dd),
+                compared_against=session.get(
+                    "locked_previous_dd",
+                    previous_dd
+                ),
                 status=overall_status,
                 user_id=current_user.id
             )
@@ -119,7 +130,11 @@ def comparison():
                 session["locked_previous_dd"] = previous_dd
 
             transaction = next(
-                (item for item in SWH_TRANSACTIONS if item["key"] == selected_transaction),
+                (
+                    item
+                    for item in SWH_TRANSACTIONS
+                    if item["key"] == selected_transaction
+                ),
                 None
             )
 
@@ -134,7 +149,6 @@ def comparison():
 
                 comparison_result = compare_swh_variants(comparison_file_pairs)
 
-
                 # Set simple status (used by tiles)
                 if comparison_result["overall_status"] == "passed":
                     status = "Passed"
@@ -147,10 +161,12 @@ def comparison():
                 # Store failed variants for DB later
                 tracker_results = session.get("tracker_results", {})
 
-                # Store any variant that did not pass, so Results can show CA/CV/CX failures
+                # Store failed variants, so Results can show CA/CV/CX failures
                 failed_variants = [
                     variant
-                    for variant, result in comparison_result["variant_results"].items()
+                    for variant, result in comparison_result[
+                        "variant_results"
+                    ].items()
                     if result.get("passed") is False
                 ]
 
@@ -161,7 +177,6 @@ def comparison():
 
                 # Duplicated line replaced to pass failed variants
                 session["tracker_results"] = tracker_results
-
 
     all_run = all(
         tracker_statuses.get(transaction["key"]) in ["Passed", "Failed"]

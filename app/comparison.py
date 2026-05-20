@@ -31,17 +31,31 @@ def compare_csv_files(previous_file, latest_file):
     differences = []
 
     for row_index in range(max_rows):
-        previous_row = previous_rows[row_index] if row_index < len(previous_rows) else []
-        latest_row = latest_rows[row_index] if row_index < len(latest_rows) else []
+        previous_row = (
+            previous_rows[row_index]
+            if row_index < len(previous_rows)
+            else []
+        )
+
+        latest_row = (
+            latest_rows[row_index]
+            if row_index < len(latest_rows)
+            else []
+        )
 
         max_cols = max(len(previous_row), len(latest_row))
 
         for col_index in range(max_cols):
             previous_value = (
-                previous_row[col_index] if col_index < len(previous_row) else ""
+                previous_row[col_index]
+                if col_index < len(previous_row)
+                else ""
             )
+
             latest_value = (
-                latest_row[col_index] if col_index < len(latest_row) else ""
+                latest_row[col_index]
+                if col_index < len(latest_row)
+                else ""
             )
 
             if previous_value != latest_value:
