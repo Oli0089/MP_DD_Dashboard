@@ -85,3 +85,64 @@ class UserRole(db.Model):
 
     user = db.relationship("User", back_populates="roles")
     role = db.relationship("Role", back_populates="users")
+
+
+# Stores one full DD run (one press of "Finalise DD Run")
+class DDRun(db.Model):
+    __tablename__ = "dd_runs"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Latest DD version
+    dd_version = db.Column(db.String(20), nullable=False)
+
+    # Previous DD for comparison
+    compared_against = db.Column(db.String(20), nullable=False)
+
+    # Overall (Passed / Failed)
+    status = db.Column(db.String(20), nullable=False)
+
+    # When the run was finalised
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Who ran the DD - actual value
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+
+    # Allows Results page for full User object
+    user = db.relationship("User")
+
+    # Relationship to all SWH results under this run
+    results = db.relationship(
+        "SWHResult",
+        back_populates="dd_run",
+        cascade="all, delete-orphan"
+    )
+
+
+# Stores the result of each SWH transaction within a DD run
+class SWHResult(db.Model):
+    __tablename__ = "swh_results"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Key used in config (e.g. "cdl_nb_comp")
+    swh_key = db.Column(db.String(80), nullable=False)
+
+    # Display name (e.g. "CDL NB Comp")
+    swh_name = db.Column(db.String(120), nullable=False)
+
+    # Result of this SWH (Passed / Failed)
+    status = db.Column(db.String(20), nullable=False)
+
+    # Comma-separated failed variants (e.g. "CX" or "CA,CV")
+    failed_variants = db.Column(db.String(120), nullable=True)
+
+    # Link back to the DD run this belongs to
+    dd_run_id = db.Column(
+        db.Integer,
+        db.ForeignKey("dd_runs.id"),
+        nullable=False
+    )
+
+    # Relationship back to DDRun
+    dd_run = db.relationship("DDRun", back_populates="results")

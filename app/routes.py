@@ -1,12 +1,25 @@
 # app/routes.py
 from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import (
+    Blueprint,
+    render_template,
+    redirect,
+    url_for,
+    flash,
+    request,
+    session,
+)
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
-from app.models import User, Role, UserRole
+from app.models import User, Role, UserRole, DDRun, SWHResult
 from app.config.swh import SWH_TRANSACTIONS
-from app.file_discovery import find_all_dd_versions
+from app.comparison import compare_swh_variants
+from app.file_discovery import (
+    find_all_dd_versions,
+    find_variants_for_dd,
+    build_comparison_file_pairs
+)
 
 
 bp = Blueprint("routes", __name__)
@@ -28,18 +41,147 @@ def comparison():
     latest_dd = ""
     previous_dd = ""
     selected_transaction = ""
+    found_variants_map = {}
+    comparison_file_pairs = {}
+    comparison_result = {}
+
+    tracker_statuses = session.get("tracker_statuses", {})
+    tracker_results = session.get("tracker_results", {})
+
+    all_run = all(
+        tracker_statuses.get(transaction["key"]) in ["Passed", "Failed"]
+        for transaction in SWH_TRANSACTIONS
+    )
 
     if dd_versions:
         latest_dd = dd_versions[-1]
 
-        # if only one found, use the same for now
         if len(dd_versions) == 1:
             previous_dd = dd_versions[0]
         else:
             previous_dd = dd_versions[-2]
 
+        # build found variants for all SWHs using latest DD
+        for transaction in SWH_TRANSACTIONS:
+            found_variants_map[transaction["key"]] = find_variants_for_dd(
+                transaction["folder_keywords"],
+                latest_dd
+            )
+
     if request.method == "POST":
-        selected_transaction = request.form.get("swh_transaction", "")
+        action = request.form.get("action")
+
+        if action == "finalise_dd_run":
+            # Overall run fails if any SWH failed
+            overall_status = "Passed"
+
+            if "Failed" in tracker_statuses.values():
+                overall_status = "Failed"
+
+            # Save the finalised DD run
+            dd_run = DDRun(
+                dd_version=latest_dd,
+                compared_against=session.get(
+                    "locked_previous_dd",
+                    previous_dd
+                ),
+                status=overall_status,
+                user_id=current_user.id
+            )
+
+            db.session.add(dd_run)
+            db.session.flush()
+
+            # Save each SWH result under the DD run
+            for transaction in SWH_TRANSACTIONS:
+                result = tracker_results.get(transaction["key"], {})
+                failed_variants = result.get("failed_variants", [])
+
+                swh_result = SWHResult(
+                    dd_run_id=dd_run.id,
+                    swh_key=transaction["key"],
+                    swh_name=transaction["short_name"],
+                    status=tracker_statuses.get(transaction["key"], "Not Run"),
+                    failed_variants=",".join(failed_variants)
+                )
+
+                db.session.add(swh_result)
+
+            db.session.commit()
+            # Clear current working run
+            session.pop("tracker_statuses", None)
+            session.pop("tracker_results", None)
+            session.pop("locked_previous_dd", None)
+
+            tracker_statuses = {}
+            comparison_result = {}
+            comparison_file_pairs = {}
+            selected_transaction = ""
+
+        else:
+            selected_transaction = request.form.get("swh_transaction", "")
+            previous_dd = request.form.get("previous_dd", previous_dd)
+
+            locked_previous_dd = session.get("locked_previous_dd")
+
+            if locked_previous_dd:
+                previous_dd = locked_previous_dd
+            else:
+                session["locked_previous_dd"] = previous_dd
+
+            transaction = next(
+                (
+                    item
+                    for item in SWH_TRANSACTIONS
+                    if item["key"] == selected_transaction
+                ),
+                None
+            )
+
+            if transaction:
+                comparison_file_pairs = build_comparison_file_pairs(
+                    transaction["folder_keywords"],
+                    previous_dd,
+                    latest_dd,
+                    transaction["output_file"],
+                    transaction["variants"]
+                )
+
+                comparison_result = compare_swh_variants(comparison_file_pairs)
+
+                # Set simple status (used by tiles)
+                if comparison_result["overall_status"] == "passed":
+                    status = "Passed"
+                else:
+                    status = "Failed"
+
+                tracker_statuses[selected_transaction] = status
+                session["tracker_statuses"] = tracker_statuses
+
+                # Store failed variants for DB later
+                tracker_results = session.get("tracker_results", {})
+
+                # Store failed variants, so Results can show CA/CV/CX failures
+                failed_variants = [
+                    variant
+                    for variant, result in comparison_result[
+                        "variant_results"
+                    ].items()
+                    if result.get("passed") is False
+                ]
+
+                tracker_results[selected_transaction] = {
+                    "status": status,
+                    "failed_variants": failed_variants
+                }
+
+                # Duplicated line replaced to pass failed variants
+                session["tracker_results"] = tracker_results
+
+    all_run = all(
+        tracker_statuses.get(transaction["key"]) in ["Passed", "Failed"]
+        for transaction in SWH_TRANSACTIONS
+    )
 
     return render_template(
         "comparison.html",
@@ -47,14 +189,28 @@ def comparison():
         dd_versions=dd_versions,
         latest_dd=latest_dd,
         previous_dd=previous_dd,
-        selected_transaction=selected_transaction
+        selected_transaction=selected_transaction,
+        found_variants_map=found_variants_map,
+        comparison_file_pairs=comparison_file_pairs,
+        comparison_result=comparison_result,
+        tracker_statuses=tracker_statuses,
+        all_run=all_run,
+        tracker_results=tracker_results
     )
 
 
 @bp.route("/results")
 @login_required
 def results():
-    return render_template("results.html")
+    # Show the latest finalised DD runs first
+    dd_runs = (
+        DDRun.query
+        .order_by(DDRun.created_at.desc())
+        .limit(10)
+        .all()
+    )
+
+    return render_template("results.html", dd_runs=dd_runs)
 
 
 # admins only

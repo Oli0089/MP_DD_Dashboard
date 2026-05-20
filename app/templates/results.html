@@ -21,49 +21,61 @@
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>DD140.20</td>
-              <td>DD140.10</td>
-              <td><span class="badge bg-success">Passed</span></td>
-              <td>Oliver</td>
-              <td>12/04/2026 10:42</td>
-              <td></td>
-            </tr>
+            {% for run in dd_runs %}
+              <tr>
+                <td>{{ run.dd_version }}</td>
+                <td>{{ run.compared_against }}</td>
+                <td>
+                  {% if run.status == "Passed" %}
+                    <span class="badge bg-success">Passed</span>
+                  {% else %}
+                    <span class="badge bg-danger">Failed</span>
+                  {% endif %}
+                </td>
+                <td>{{ run.user.username }}</td>
+                <td>{{ run.created_at.strftime("%H:%M %d/%m/%Y") }}</td>
+                <td>
+                  {% if run.status == "Failed" %}
+                    <button
+                      class="btn btn-sm btn-outline-secondary"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#failed-run-{{ run.id }}"
+                    >
+                      View
+                    </button>
+                  {% endif %}
+                </td>
+              </tr>
 
-            <tr>
-              <td>DD140.10</td>
-              <td>DD140.00</td>
-              <td><span class="badge bg-danger">Failed</span></td>
-              <td>Oliver</td>
-              <td>10/04/2026 09:15</td>
-              <td>
-                <button class="btn btn-sm btn-outline-secondary" type="button">
-                  View
-                </button>
-              </td>
-            </tr>
-            <tr>
-              <td colspan="6" class="bg-light">
-                <strong>Failed SWH Transactions:</strong><br>
-                CDL NB Comp failed on variants: CX<br>
-                OGI NB failed on variants: CA, CV
-              </td>
-            </tr>
+              {% if run.status == "Failed" %}
+                <tr class="collapse" id="failed-run-{{ run.id }}">
+                  <td colspan="6" class="bg-light">
+                    <strong>Failed SWH Transactions:</strong><br>
 
-            <tr>
-              <td>DD140.00</td>
-              <td>DD139.20</td>
-              <td><span class="badge bg-success">Passed</span></td>
-              <td>Oliver</td>
-              <td>05/04/2026 14:30</td>
-              <td></td>
-            </tr>
+                    {% for result in run.results %}
+                      {% if result.status == "Failed" %}
+                        {{ result.swh_name }} failed
+                        {% if result.failed_variants %}
+                          on variants: {{ result.failed_variants }}
+                        {% endif %}
+                        <br>
+                      {% endif %}
+                    {% endfor %}
+                  </td>
+                </tr>
+              {% endif %}
+            {% else %}
+              <tr>
+                <td colspan="6">No DD runs have been finalised yet.</td>
+              </tr>
+            {% endfor %}
           </tbody>
         </table>
       </div>
 
       <div class="form-text mt-3">
-        Showing the most recent DD runs.
+        Showing the 10 most recent DD runs.
       </div>
     </div>
   </div>
