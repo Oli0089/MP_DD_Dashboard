@@ -134,8 +134,6 @@ def comparison():
 
                 comparison_result = compare_swh_variants(comparison_file_pairs)
 
-                print(selected_transaction)
-                print(comparison_result)
 
                 # Set simple status (used by tiles)
                 if comparison_result["overall_status"] == "passed":
@@ -146,12 +144,14 @@ def comparison():
                 tracker_statuses[selected_transaction] = status
                 session["tracker_statuses"] = tracker_statuses
 
-                # NEW: store failed variants for DB later
+                # Store failed variants for DB later
                 tracker_results = session.get("tracker_results", {})
 
+                # Store any variant that did not pass, so Results can show CA/CV/CX failures
                 failed_variants = [
-                    v for v, r in comparison_result["variant_results"].items()
-                    if r["status"] != "passed"
+                    variant
+                    for variant, result in comparison_result["variant_results"].items()
+                    if result.get("passed") is False
                 ]
 
                 tracker_results[selected_transaction] = {
@@ -159,7 +159,8 @@ def comparison():
                     "failed_variants": failed_variants
                 }
 
-                session["tracker_statuses"] = tracker_statuses
+                # Duplicated line replaced to pass failed variants
+                session["tracker_results"] = tracker_results
 
 
     all_run = all(
