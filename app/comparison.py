@@ -20,13 +20,14 @@ def compare_csv_files(previous_file, latest_file):
     """
     Compare two CSV files cell by cell.
 
-    Returns a simple result showing:
+    Returns:
     - pass/fail
     - number of differences found
     """
     previous_rows = read_csv_rows(previous_file)
     latest_rows = read_csv_rows(latest_file)
 
+    # Use the largest row count so missing rows are also detected
     max_rows = max(len(previous_rows), len(latest_rows))
     differences = []
 
@@ -45,6 +46,7 @@ def compare_csv_files(previous_file, latest_file):
 
         max_cols = max(len(previous_row), len(latest_row))
 
+        # Compare each cell value in the current row
         for col_index in range(max_cols):
             previous_value = (
                 previous_row[col_index]
@@ -58,6 +60,7 @@ def compare_csv_files(previous_file, latest_file):
                 else ""
             )
 
+            # Record any changed values between DD versions
             if previous_value != latest_value:
                 differences.append(
                     {
@@ -68,30 +71,23 @@ def compare_csv_files(previous_file, latest_file):
                     }
                 )
 
-        return {
-            "passed": len(differences) == 0,
-            "difference_count": len(differences),
-            "differences": differences,
-        }
+    return {
+        "passed": len(differences) == 0,
+        "difference_count": len(differences),
+        "differences": differences,
+    }
 
 
 def compare_swh_variants(comparison_file_pairs):
-    """
-    Compare all paired files for one SWH transaction.
-
-    Expects input in the format:
-    {
-        "CA": {"previous": "...", "latest": "..."},
-        "CV": {"previous": "...", "latest": "..."},
-        "CX": {"previous": None, "latest": "..."}
-    }
-    """
+    #Compare all paired files for one SWH transaction.
     variant_results = {}
 
+    # Compare each expected variant for the SWH
     for variant, file_pair in comparison_file_pairs.items():
         previous_file = file_pair.get("previous")
         latest_file = file_pair.get("latest")
 
+        # Mark the variant as failed if a comparison file is missing
         if not previous_file or not latest_file:
             variant_results[variant] = {
                 "status": "missing",
@@ -110,6 +106,7 @@ def compare_swh_variants(comparison_file_pairs):
             "differences": compare_result["differences"],
         }
 
+    # SWH passes only if all variants pass
     overall_passed = all(
         result["status"] == "passed"
         for result in variant_results.values()

@@ -6,8 +6,6 @@ RESULTS_ROOT = (
     r"\F1 Premier Data\Results\UK Private Motor"
 )
 
-BROKER_OUTPUT_FILE = "CDLIHP_BrokerOutputs2.CSV"
-
 
 # Converts DD values extracted from folder names into a standard format.
 # Example: "13820" or "138 20" -> "138.20"

@@ -1,6 +1,9 @@
 # tests/test_app.py
 import pytest
+import tempfile
 from app import create_app, db
+from app.file_discovery import normalise_dd
+from app.comparison import compare_csv_files, compare_swh_variants
 
 
 # Fixtures
@@ -141,6 +144,19 @@ def test_register_page_loads(client):
     assert response.status_code == 200
     assert b"Register" in response.data
 
+
+def test_comparison_page_loads(client):
+    register_and_login(client)
+    response = client.get("/comparison")
+    assert response.status_code == 200
+    assert b"Run Comparison" in response.data
+
+
+def test_results_page_loads(client):
+    register_and_login(client)
+    response = client.get("/results")
+    assert response.status_code == 200
+    assert b"DD Version" in response.data
 
 # Registration/validation rules
 # =====================================
@@ -315,3 +331,70 @@ def test_admin_can_access_admin_page(app, client):
     resp = client.get("/admin", follow_redirects=False)
     assert resp.status_code == 200
     assert b"Admin Panel" in resp.data
+
+
+# Comparison Testing
+# =====================================
+def test_normalise_dd_formats_version():
+    # DD versions should be stored consistently
+    assert normalise_dd("141 00") == "141.00"
+    assert normalise_dd("140  20") == "140.20"
+    assert normalise_dd("13900") == "139.00"
+
+
+def test_compare_csv_files_passes_when_identical():
+    # Matching CSV files should produce a pass result
+
+    csv_content = "A,B,C\n1,2,3"
+
+    # Create two temporary files containing identical data
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as file1:
+        file1.write(csv_content)
+
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as file2:
+        file2.write(csv_content)
+
+    # Run the comparison engine
+    result = compare_csv_files(file1.name, file2.name)
+
+    # No differences should be found
+    assert result["passed"] is True
+    assert result["difference_count"] == 0
+
+
+def test_compare_csv_files_fails_when_values_change():
+    # CSV values should be detected if different
+
+    previous_csv = "A,B,C\n1,2,3"
+    latest_csv = "A,B,C\n1,9,3"
+
+    # Create two temporary files containing identical data
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as file1:
+        file1.write(previous_csv)
+
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as file2:
+        file2.write(latest_csv)
+
+    # Run the comparison engine
+    result = compare_csv_files(file1.name, file2.name)
+
+    # A changed value should generate a failed comparison
+    assert result["passed"] is False
+    assert result["difference_count"] == 1
+
+
+def test_compare_swh_variants_fails_when_variant_missing():
+    # A single failed variant should fail the overall SWH result
+    comparison_file_pairs = {
+        "CA": {"previous": None, "latest": None},
+        "CV": {"previous": None, "latest": "file2.csv"}
+    }
+
+    result = compare_swh_variants(comparison_file_pairs)
+
+    # Overall result should fail because CV is missing
+    assert result["overall_status"] == "failed"
+
+    # The failed variant should be recorded
+    assert result["variant_results"]["CA"]["status"] == "missing"
+    assert result["variant_results"]["CV"]["status"] == "missing"
